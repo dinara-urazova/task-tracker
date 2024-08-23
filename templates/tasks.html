@@ -1,0 +1,11 @@
+<h1>Все задачи</h1>
+{% if tasks %}
+<ol>
+    {% for task in tasks %}
+        <li>{{task.name}}</li>
+    {% endfor %}
+</ol>    
+    
+{% else %}
+<p>Список пуст</p>
+{% endif %}
