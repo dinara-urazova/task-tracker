@@ -1,11 +1,13 @@
 <h1>Все задачи</h1>
+
+<a href="/tasks/new">Создать новую</a>
+
 {% if tasks %}
 <ol>
     {% for task in tasks %}
-        <li>{{task.name}}</li>
+    <li><a href="/tasks/{{task.id}}">{{ task.name }}</a></li>
     {% endfor %}
-</ol>    
-    
+</ol>
 {% else %}
-<p>Список пуст</p>
+<p>Список пуст. Создайте свою первую задачу.></p>
 {% endif %}
