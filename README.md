@@ -1,3 +1,6 @@
+# Install project
+
+To install project on local machine run these commands:
 ```bash
 $ python3 -m venv .venv
 $ . .venv/bin/activate
@@ -7,3 +10,15 @@ $ . .venv/bin/activate
 ...работает сервер, ctrl + c для выхода
 (venv) $ deactivate
 ```
+
+or simple run this script:
+```
+$ ./install.sh
+```
+
+# Run project
+```
+$ ./run.sh
+```
+
+and then  open your browser.
