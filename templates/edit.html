@@ -1,0 +1,9 @@
+<a href="/tasks/{{ task.id }}">Назад</a><br><br>
+
+<form action="/tasks/{{ task.id }}/update" method="post" target="_blank">
+  <label for="task_name">Название:</label>
+  <input type="text" id="task_name" name="task_name" value="{{ task.name }}"><br><br>
+  <label for="task_description">Описание:</label>
+  <textarea id="task_description" name="task_description" rows="10" cols="30">{{ task.description }}</textarea><br><br>
+  <input type="submit" value="Сохранить">
+</form>
