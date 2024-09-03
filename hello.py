@@ -2,15 +2,14 @@ from flask import Flask, redirect, render_template, request
 
 app = Flask(__name__)
 
-chores = [
-    {"id": 1, "name": "Сходить в магазин", "description": "Сходить в 'Байрам'"},
-    {
-        "id": 2,
+chores = {
+    2: {
         "name": "Съездить на дачу",
         "description": "Взять фонарь, купить корм кошкам, не забыть ноутбук",
     },
-    {"id": 3, "name": "Постирать одежду", "description": "Не позднее пятницы 13-го"},
-]
+    3: {"name": "Постирать одежду", "description": "Не позднее пятницы 13-го"},
+    100: {"name": "Сходить в магазин", "description": "Сходить в 'Байрам'"},
+}
 
 
 @app.route("/", methods=["GET"])
@@ -25,25 +24,29 @@ def get_tasks():
 
 @app.route("/tasks/<int:id>", methods=["GET"])
 def show_task(id: int):
-    return render_template("task.html", task=chores[id - 1])
+    return render_template("task.html", task=chores[id], task_id=id)
 
 
 @app.route("/tasks/<int:id>/edit", methods=["GET"])
 def edit_task_form(id: int):
-    return render_template("edit.html", task=chores[id - 1])
+    return render_template("edit.html", task=chores[id], task_id=id)
 
 
 @app.route("/tasks/<int:id>/update", methods=["POST"])
 def update_task(id: int):
-    print(f"id = {id}")
-
     new_name = request.form["task_name"]
-    new_desription = request.form["task_description"]
+    new_description = request.form["task_description"]
 
-    chores[id - 1] = {
-        "id": id,
+    chores[id] = {
         "name": new_name,
-        "description": new_desription,
+        "description": new_description,
     }
 
     return redirect(f"/tasks/{id}")
+
+
+@app.route("/tasks/<int:id>/delete", methods=["GET"])
+def delete_task(id: int):
+    del chores[id]
+
+    return redirect("/tasks")
