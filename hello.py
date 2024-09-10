@@ -2,14 +2,7 @@ from flask import Flask, redirect, render_template, request
 
 app = Flask(__name__)
 
-chores = {
-    2: {
-        "name": "Съездить на дачу",
-        "description": "Взять фонарь, купить корм кошкам, не забыть ноутбук",
-    },
-    3: {"name": "Постирать одежду", "description": "Не позднее пятницы 13-го"},
-    100: {"name": "Сходить в магазин", "description": "Сходить в 'Байрам'"},
-}
+chores = {}
 
 
 @app.route("/", methods=["GET"])
@@ -34,7 +27,10 @@ def new_task_form():
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
-    new_task_id = max(chores.keys()) + 1
+    if len(chores.keys()) == 0:
+        new_task_id = 1
+    else:
+        new_task_id = max(chores.keys()) + 1
     name = request.form["task_name"]
     description = request.form["task_description"]
 
