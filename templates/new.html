@@ -1,0 +1,11 @@
+<a href="/tasks">Назад</a><br><br>
+
+<form action="/tasks/create" method="post">
+    <label for="task_name">Название:</label>
+    <input type="text" id="task_name" name="task_name" required minlength="3" maxlength="100">
+    <br><br>
+    <label for="task_description">Описание:</label>
+    <textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3"
+        maxlength="2000"></textarea><br><br>
+    <input type="submit" value="Сохранить">
+</form>

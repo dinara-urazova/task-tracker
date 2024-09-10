@@ -27,6 +27,25 @@ def show_task(id: int):
     return render_template("task.html", task=chores[id], task_id=id)
 
 
+@app.route("/tasks/new", methods=["GET"])
+def new_task_form():
+    return render_template("new.html")
+
+
+@app.route("/tasks/create", methods=["POST"])
+def create_task():
+    new_task_id = max(chores.keys()) + 1
+    name = request.form["task_name"]
+    description = request.form["task_description"]
+
+    chores[new_task_id] = {
+        "name": name,
+        "description": description,
+    }
+
+    return redirect(f"/tasks/{new_task_id}")
+
+
 @app.route("/tasks/<int:id>/edit", methods=["GET"])
 def edit_task_form(id: int):
     return render_template("edit.html", task=chores[id], task_id=id)
