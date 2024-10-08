@@ -11,7 +11,7 @@ $ . .venv/bin/activate
 (venv) $ deactivate
 ```
 
-or simple run this script:
+or simply run this script:
 ```
 $ ./install.sh
 ```
