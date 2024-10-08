@@ -1,5 +1,6 @@
 from flask import Flask, redirect, render_template, request
 from task_storage import TaskStorage, Task
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -30,11 +31,14 @@ def show_new_task_form():
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
+    now = datetime.now()
+    created_at = now.strftime("%d/%m/%Y %H:%M:%S")
     new_task = Task(
         request.form["task_name"],
         request.form["task_description"],
+        created_at
     )
-    new_task_id = task_storage.add(new_task)
+    new_task_id = task_storage.create(new_task)
     return redirect(f"/tasks/{new_task_id}")
 
 
@@ -47,10 +51,12 @@ def show_edit_task_form(id: str):
 @app.route("/tasks/<string:id>/update", methods=["POST"])
 def update_task(id: str):
     """
-    Пользователь открыл в браузере существующую задачу, отредакровал её и нажал
+    Пользователь открыл в браузере существующую задачу, отредактировал её и нажал
     кнопку "Сохранить" на форме.
 
-    В результате браузер отправил на сервер HTTP запрос:
+    В результате браузер отправил на сервер HTTP POST-запрос с данными, которые
+    ввел пользователь.
+    Какие данные придут в этом запросе? (чтобы это понять см. файл edit.html)
 
     ```
     POST /tasks/<task_id>/update
@@ -58,10 +64,10 @@ def update_task(id: str):
     task_name=...
     task_description=...
     ```
-
-    (чтобы это понять см. файл edit.html)
     """
-    updated_task = Task(request.form["task_name"], request.form["task_description"])
+    now = datetime.now()
+    created_at = now.strftime("%d/%m/%Y %H:%M:%S")
+    updated_task = Task(request.form["task_name"], request.form["task_description"], created_at)
     task_storage.update(id, updated_task)
     return redirect(f"/tasks/{id}")
 
