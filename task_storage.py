@@ -1,11 +1,13 @@
 import json
 from typing import NamedTuple
 
+
 class Task(NamedTuple):
     name: str
     description: str
     created_at: str
     updated_at: str
+
 
 class TaskStorage:
     def read_json(self) -> dict:
@@ -21,6 +23,8 @@ class TaskStorage:
             print(
                 "[WARNING] tasks file contains invalid JSON content, creating a new one"
             )
+            tasks = {}
+            self.write_json(tasks)
         return tasks
 
     def write_json(self, tasks: dict) -> None:
@@ -49,6 +53,7 @@ class TaskStorage:
         tasks[task_key] = {
             "name": updated_task.name,
             "description": updated_task.description,
+            "created_at": tasks[task_key]["created_at"],
             "updated_at": updated_task.updated_at,
         }
         self.write_json(tasks)
