@@ -34,7 +34,7 @@ def show_new_task_form():
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
-    created_at = updated_at = datetime.now(timezone.utc).isoformat
+    created_at = updated_at = datetime.now(timezone.utc).isoformat()
     new_task = Task(
         request.form["task_name"],
         request.form["task_description"],
@@ -68,7 +68,7 @@ def update_task(id: str):
     task_description=...
     ```
     """
-    updated_at = datetime.now(timezone.utc).isoformat
+    updated_at = datetime.now(timezone.utc).isoformat()
     updated_task = Task(
         request.form["task_name"],
         request.form["task_description"],

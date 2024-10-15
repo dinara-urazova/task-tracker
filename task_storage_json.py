@@ -16,6 +16,8 @@ class TaskStorageJson:
             print(
                 "[WARNING] tasks file contains invalid JSON content, creating a new one"
             )
+            tasks = {}
+            self.write_json(tasks)
         return tasks
 
     def write_json(self, tasks: dict) -> None:
@@ -44,6 +46,7 @@ class TaskStorageJson:
         tasks[task_key] = {
             "name": updated_task.name,
             "description": updated_task.description,
+            "created_at": tasks[task_key]["created_at"],
             "updated_at": updated_task.updated_at,
         }
         self.write_json(tasks)
