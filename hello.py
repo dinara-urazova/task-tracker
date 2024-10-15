@@ -1,6 +1,6 @@
 from flask import Flask, redirect, render_template, request
 from task_storage import TaskStorage, Task
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 app = Flask(__name__)
@@ -31,12 +31,12 @@ def show_new_task_form():
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
-    now = datetime.now()
-    created_at = now.strftime("%d/%m/%Y %H:%M:%S")
+    created_at = updated_at = datetime.now(timezone.utc).isoformat
     new_task = Task(
         request.form["task_name"],
         request.form["task_description"],
-        created_at
+        created_at,
+        updated_at,
     )
     new_task_id = task_storage.create(new_task)
     return redirect(f"/tasks/{new_task_id}")
@@ -65,9 +65,13 @@ def update_task(id: str):
     task_description=...
     ```
     """
-    now = datetime.now()
-    created_at = now.strftime("%d/%m/%Y %H:%M:%S")
-    updated_task = Task(request.form["task_name"], request.form["task_description"], created_at)
+    updated_at = datetime.now(timezone.utc).isoformat
+    updated_task = Task(
+        request.form["task_name"],
+        request.form["task_description"],
+        None,
+        updated_at,
+    )
     task_storage.update(id, updated_task)
     return redirect(f"/tasks/{id}")
 

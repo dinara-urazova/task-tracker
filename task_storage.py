@@ -1,12 +1,11 @@
 import json
 from typing import NamedTuple
-from datetime import datetime
-
 
 class Task(NamedTuple):
     name: str
     description: str
     created_at: str
+    updated_at: str
 
 class TaskStorage:
     def read_json(self) -> dict:
@@ -38,7 +37,8 @@ class TaskStorage:
         tasks[str(new_task_id)] = {
             "name": task.name,
             "description": task.description,
-            "created_at": task.created_at
+            "created_at": task.created_at,
+            "updated_at": task.created_at,
         }
         self.write_json(tasks)
 
@@ -49,7 +49,7 @@ class TaskStorage:
         tasks[task_key] = {
             "name": updated_task.name,
             "description": updated_task.description,
-            "created_at": updated_task.created_at
+            "updated_at": updated_task.updated_at,
         }
         self.write_json(tasks)
 
