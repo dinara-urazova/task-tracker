@@ -1,13 +1,8 @@
 import json
-from typing import NamedTuple
+from task import Task
 
-class Task(NamedTuple):
-    name: str
-    description: str
-    created_at: str
-    updated_at: str
 
-class TaskStorage:
+class TaskStorageJson:
     def read_json(self) -> dict:
         try:
             f = open("tasks.json", "r", encoding="utf-8")
