@@ -1,12 +1,10 @@
 from flask import Flask, redirect, render_template, request
 from task import Task
-# from task_storage_json import TaskStorageJson
 from task_storage_sqlite import TaskStorageSQLite
 from datetime import datetime, timezone
 
 
 app = Flask(__name__)
-# task_storage = TaskStorageJson()
 task_storage = TaskStorageSQLite()
 
 
@@ -47,7 +45,7 @@ def create_task():
 
 @app.route("/tasks/<string:id>/edit", methods=["GET"])
 def show_edit_task_form(id: str):
-    task_to_edit = task_storage.read_by_id()
+    task_to_edit = task_storage.read_by_id(id)
     return render_template("edit.html", task=task_to_edit, task_id=id)
 
 

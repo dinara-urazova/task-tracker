@@ -9,7 +9,8 @@ class TaskStorageSQLite:
 
     def read_all(self) -> dict:
         if self.connection is None:
-            self.connection = sqlite3.connect("tasks.db")
+            #  self.connection = sqlite3.connect("tasks.db")
+            self.connection = sqlite3.connect("tasks.db", check_same_thread=False)
         cursor = self.connection.cursor()
         result = cursor.execute("SELECT * FROM tasks")
 
@@ -28,16 +29,18 @@ class TaskStorageSQLite:
         cursor = self.connection.cursor()
         result = cursor.execute(f"SELECT * FROM tasks WHERE id = {id}")
         row = result.fetchone()
+        return Task(row[1], row[2], row[3], row[4])
 
-        return Task(row[1], row[2])
-
-    def add(self, task: Task) -> int:
+    def create(self, task: Task) -> int:
         cursor = self.connection.cursor()
         created_at = updated_at = datetime.now(timezone.utc).isoformat()
         cursor.execute(
             f"""
             INSERT INTO tasks (name, description, created_at, updated_at) VALUES
-                ('{task.name}', '{task.description}', '{created_at}', '{updated_at}')
+                ('{task.name}', 
+                '{task.description}', 
+                '{created_at}', 
+                '{updated_at}')
         """
         )
         self.connection.commit()
@@ -51,7 +54,7 @@ class TaskStorageSQLite:
             f"""
             UPDATE tasks SET 
                 name = '{updated_task.name}',
-                description = '{updated_task.description}', 
+                description = '{updated_task.description}',
                 updated_at = '{updated_at}'
             WHERE id = {task_key}
         """
