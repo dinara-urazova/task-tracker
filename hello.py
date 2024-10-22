@@ -1,10 +1,11 @@
 from flask import Flask, redirect, render_template, request
-from task_storage import TaskStorage, Task
+from task import Task
+from task_storage_sqlite import TaskStorageSQLite
 from datetime import datetime, timezone
 
 
 app = Flask(__name__)
-task_storage = TaskStorage()
+task_storage = TaskStorageSQLite()
 
 
 @app.route("/", methods=["GET"])
@@ -14,14 +15,14 @@ def root():
 
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
-    chores = task_storage.read_json()
+    chores = task_storage.read_all()
     return render_template("tasks.html", tasks=chores)
 
 
 @app.route("/tasks/<string:id>", methods=["GET"])
 def show_task(id: str):
-    chores = task_storage.read_json()
-    return render_template("task.html", task=chores[id], task_id=id)
+    task_to_show = task_storage.read_by_id(id)
+    return render_template("task.html", task=task_to_show, task_id=id)
 
 
 @app.route("/tasks/new", methods=["GET"])
@@ -44,8 +45,8 @@ def create_task():
 
 @app.route("/tasks/<string:id>/edit", methods=["GET"])
 def show_edit_task_form(id: str):
-    chores = task_storage.read_json()
-    return render_template("edit.html", task=chores[id], task_id=id)
+    task_to_edit = task_storage.read_by_id(id)
+    return render_template("edit.html", task=task_to_edit, task_id=id)
 
 
 @app.route("/tasks/<string:id>/update", methods=["POST"])
