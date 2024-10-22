@@ -1,11 +1,13 @@
 from flask import Flask, redirect, render_template, request
 from task import Task
 from task_storage_sqlite import TaskStorageSQLite
+from task_storage_json import TaskStorageJson
 from datetime import datetime, timezone
 
 
 app = Flask(__name__)
-task_storage = TaskStorageSQLite()
+# task_storage = TaskStorageSQLite()
+task_storage = TaskStorageJson()
 
 
 @app.route("/", methods=["GET"])
