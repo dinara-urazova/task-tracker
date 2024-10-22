@@ -1,17 +1,12 @@
-import sqlite3
 from task import Task
 from datetime import datetime, timezone
+from sqlite_singleton import SQLiteSingleton
 
 
 class TaskStorageSQLite:
-    def __init__(self):
-        self.connection = None
 
     def read_all(self) -> dict:
-        if self.connection is None:
-            #  self.connection = sqlite3.connect("tasks.db")
-            self.connection = sqlite3.connect("tasks.db", check_same_thread=False)
-        cursor = self.connection.cursor()
+        cursor = SQLiteSingleton.getConnection().cursor()
         result = cursor.execute("SELECT * FROM tasks")
 
         tasks = {}
@@ -26,13 +21,13 @@ class TaskStorageSQLite:
         return tasks
 
     def read_by_id(self, id: int) -> Task:
-        cursor = self.connection.cursor()
+        cursor = SQLiteSingleton.getConnection().cursor()
         result = cursor.execute(f"SELECT * FROM tasks WHERE id = {id}")
         row = result.fetchone()
         return Task(row[1], row[2], row[3], row[4])
 
     def create(self, task: Task) -> int:
-        cursor = self.connection.cursor()
+        cursor = SQLiteSingleton.getConnection().cursor()
         created_at = updated_at = datetime.now(timezone.utc).isoformat()
         cursor.execute(
             f"""
@@ -43,11 +38,11 @@ class TaskStorageSQLite:
                 '{updated_at}')
         """
         )
-        self.connection.commit()
+        SQLiteSingleton.getConnection().commit()
         return cursor.lastrowid
 
     def update(self, task_key: str, updated_task: Task) -> None:
-        cursor = self.connection.cursor()
+        cursor = SQLiteSingleton.getConnection().cursor()
         updated_at = datetime.now(timezone.utc).isoformat()
 
         cursor.execute(
@@ -59,9 +54,9 @@ class TaskStorageSQLite:
             WHERE id = {task_key}
         """
         )
-        self.connection.commit()
+        SQLiteSingleton.getConnection().commit()
 
     def delete(self, task_key: str) -> None:
-        cursor = self.connection.cursor()
+        cursor = SQLiteSingleton.getConnection().cursor()
         cursor.execute(f"DELETE FROM tasks WHERE id = {task_key}")
-        self.connection.commit()
+        SQLiteSingleton.getConnection().commit()
