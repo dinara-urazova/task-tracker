@@ -3,11 +3,11 @@
 <a href="/tasks/new">Создать новую</a>
 
 {% if tasks %}
-<ul>
+<ol>
     {% for task_id, task in tasks.items() %}
-    <li>{{task_id}}. <a href="/tasks/{{task_id}}">{{ task.name }}</a></li>
+    <li><a href="/tasks/{{task_id}}">{{ task.name }}</a></li>
     {% endfor %}
-</ul>
+</ol>
 {% else %}
 <p>Список пуст. Создайте свою первую задачу.</p>
 {% endif %}
