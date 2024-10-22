@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 
 app = Flask(__name__)
-# task_storage = TaskStorageSQLite()
-task_storage = TaskStorageJson()
+task_storage = TaskStorageSQLite()
+# task_storage = TaskStorageJson()
 
 
 @app.route("/", methods=["GET"])
