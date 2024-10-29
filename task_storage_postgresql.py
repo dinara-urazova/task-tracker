@@ -19,10 +19,12 @@ class TaskStoragePostgreSQL:
 
         return tasks
 
-    def read_by_id(self, id: int) -> Task:
+    def read_by_id(self, id: int) -> Task | None:
         results = PostgreSQLSingleton.getConnection().run(
             f"SELECT * FROM tasks WHERE id = {id}"
         )
+        if len(results) == 0:
+            return None
         row = results[0]
         return Task(row[1], row[2], row[3], row[4])
 

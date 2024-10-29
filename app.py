@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request
+from flask import abort, Flask, redirect, render_template, request
 from task import Task
 from task_storage_sqlite import TaskStorageSQLite
 from task_storage_json import TaskStorageJson
@@ -26,6 +26,8 @@ def get_tasks():
 @app.route("/tasks/<string:id>", methods=["GET"])
 def show_task(id: str):
     task_to_show = task_storage.read_by_id(id)
+    if task_to_show == None:
+        return abort(404, f"Task with id={id} not found")
     return render_template("task.html", task=task_to_show, task_id=id)
 
 
