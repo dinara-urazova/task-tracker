@@ -29,17 +29,15 @@ class TaskStoragePostgreSQL:
         return Task(row[1], row[2], row[3], row[4])
 
     def create(self, task: Task) -> int:
-        created_at = updated_at = datetime.now(timezone.utc).isoformat()
         results = PostgreSQLSingleton.getConnection().run(
             f"""
             INSERT INTO tasks (name, description, created_at, updated_at) VALUES
                 ('{task.name}', 
                 '{task.description}', 
-                '{created_at}', 
-                '{updated_at}') RETURNING id
+                '{task.created_at}', 
+                '{task.updated_at}') RETURNING id
         """
         )
-
         row = results[0]
         return row[0]
 
