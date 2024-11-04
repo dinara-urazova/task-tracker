@@ -20,7 +20,7 @@ class TaskStorageSQLite:
 
         return tasks
 
-    def read_by_id(self, id: int) -> Task:
+    def read_by_id(self, id: int) -> Task | None:
         cursor = SQLiteSingleton.getConnection().cursor()
         result = cursor.execute(f"SELECT * FROM tasks WHERE id = {id}")
         row = result.fetchone()
