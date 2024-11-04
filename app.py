@@ -27,7 +27,7 @@ def get_tasks():
 def show_task(id: str):
     task_to_show = task_storage.read_by_id(id)
     if task_to_show == None:
-        return abort(404, f"Task with id={id} not found")
+        return abort(404, f"Task with id = {id} not found")
     return render_template("task.html", task=task_to_show, task_id=id)
 
 
@@ -52,7 +52,8 @@ def create_task():
 @app.route("/tasks/<string:id>/edit", methods=["GET"])
 def show_edit_task_form(id: str):
     task_to_edit = task_storage.read_by_id(id)
-    # task_to_edit мб None
+    if task_to_edit == None:
+        return abort(404, f"Task with id = {id} not found")
     return render_template("edit.html", task=task_to_edit, task_id=id)
 
 
@@ -73,7 +74,7 @@ def update_task(id: str):
     task_description=...
     ```
     """
-    # проверить if task with id exists
+    # здесь id проверять не нужно, так как 56-57 строки не передают invalid id ни в шаблон edit.html, ни далее в эту функцию-обработчик update_task (указана в form action)
     updated_at = datetime.now(timezone.utc).isoformat()
     updated_task = Task(
         request.form["task_name"],
@@ -87,6 +88,8 @@ def update_task(id: str):
 
 @app.route("/tasks/<string:id>/delete", methods=["GET"])
 def delete_task(id: str):
-    # to do  - прочитать из БД если есть task если нет abort, если есть delete
+    task_to_delete = task_storage.read_by_id(id)
+    if task_to_delete == None:
+        return abort(404, f"Task with id = {id} not found")
     task_storage.delete(id)
     return redirect("/tasks")
