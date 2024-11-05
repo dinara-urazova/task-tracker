@@ -74,7 +74,9 @@ def update_task(id: str):
     task_description=...
     ```
     """
-    # здесь id проверять не нужно, так как 56-57 строки не передают invalid id ни в шаблон edit.html, ни далее в эту функцию-обработчик update_task (указана в form action)
+    task_to_update = task_storage.read_by_id(id)
+    if task_to_update == None:
+        return abort(404, f"Task with id = {id} not found")
     updated_at = datetime.now(timezone.utc).isoformat()
     updated_task = Task(
         request.form["task_name"],

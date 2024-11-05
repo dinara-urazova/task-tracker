@@ -6,7 +6,7 @@ from postgresql_singleton import PostgreSQLSingleton
 class TaskStoragePostgreSQL:
 
     def read_all(self) -> dict:
-        result = PostgreSQLSingleton.getConnection().run("SELECT * FROM tasks")
+        result = PostgreSQLSingleton.getConnection().run("SELECT * FROM tasks ORDER BY id ASC")
 
         tasks = {}
         for row in result:
