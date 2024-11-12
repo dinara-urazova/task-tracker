@@ -12,7 +12,6 @@ class TaskStorageMock:
             setattr(self, k, v)
 
 
-
 def test_root():
     client = app.test_client()
     response = client.get("/")
@@ -21,25 +20,30 @@ def test_root():
 
 
 def test_get_tasks_empty():
-    app.config["task_storage"] = TaskStorageMock({
-        "read_all": lambda: [],
-    })
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_all": lambda: [],
+        }
+    )
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
-    assert response.get_data(as_text=True) == \
-"""<h1>Все задачи</h1>
+    assert (
+        response.get_data(as_text=True)
+        == """<h1>Все задачи</h1>
 
 <a href="/tasks/new">Создать новую</a>
 
 
 <p>Список пуст. Создайте свою первую задачу.</p>
 """
+    )
 
 
 def test_get_tasks_not_empty():
-    app.config["task_storage"] = TaskStorageMock({
-        "read_all": lambda: {
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_all": lambda: {
                 1: {
                     "name": "Отдохнуть",
                     "description": "Посмотреть фильм",
@@ -49,12 +53,14 @@ def test_get_tasks_not_empty():
                     "description": "Хлеб, молоко",
                 },
             }
-    })
+        }
+    )
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
-    assert response.get_data(as_text=True) == \
-"""<h1>Все задачи</h1>\n
+    assert (
+        response.get_data(as_text=True)
+        == """<h1>Все задачи</h1>\n
 <a href="/tasks/new">Создать новую</a>\n\n
 <ol>
     
@@ -64,3 +70,4 @@ def test_get_tasks_not_empty():
     
 </ol>
 """
+    )
