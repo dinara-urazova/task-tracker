@@ -6,6 +6,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import app
 
 
+class TaskStorageMock:
+    def __init__(self, dictionary: dict) -> None:
+        for k, v in dictionary.items():
+            setattr(self, k, v)
+
+
+
 def test_root():
     client = app.test_client()
     response = client.get("/")
@@ -14,11 +21,9 @@ def test_root():
 
 
 def test_get_tasks_empty():
-    class TaskStorageMock:
-        def read_all(self) -> dict:
-            return []
-
-    app.config["task_storage"] = TaskStorageMock()
+    app.config["task_storage"] = TaskStorageMock({
+        "read_all": lambda: [],
+    })
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
@@ -33,9 +38,8 @@ def test_get_tasks_empty():
 
 
 def test_get_tasks_not_empty():
-    class TaskStorageMock:
-        def read_all(self) -> dict:
-            return {
+    app.config["task_storage"] = TaskStorageMock({
+        "read_all": lambda: {
                 1: {
                     "name": "Отдохнуть",
                     "description": "Посмотреть фильм",
@@ -45,17 +49,13 @@ def test_get_tasks_not_empty():
                     "description": "Хлеб, молоко",
                 },
             }
-
-    app.config["task_storage"] = TaskStorageMock()
+    })
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
     assert response.get_data(as_text=True) == \
-"""<h1>Все задачи</h1>
-
-<a href="/tasks/new">Создать новую</a>
-
-
+"""<h1>Все задачи</h1>\n
+<a href="/tasks/new">Создать новую</a>\n\n
 <ol>
     
     <li><a href="/tasks/1">Отдохнуть</a></li>
