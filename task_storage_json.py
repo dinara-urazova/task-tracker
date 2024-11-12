@@ -27,8 +27,10 @@ class TaskStorageJson:
     def read_all(self) -> dict:
         return self._read_json()
 
-    def read_by_id(self, id: int) -> Task:
+    def read_by_id(self, id: int) -> Task | None:
         tasks = self._read_json()
+        if id not in tasks:
+            return None
         return Task(
             tasks[id]["name"],
             tasks[id]["description"],
