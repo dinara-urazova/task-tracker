@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -10,6 +11,23 @@ class TaskStorageMock:
     def __init__(self, dictionary: dict) -> None:
         for k, v in dictionary.items():
             setattr(self, k, v)
+
+
+def minify(html: str) -> str:
+    """
+    Remove line breaks and spaces betweeen HTML tags
+
+    Example: "<tag> </tag>   " -> "<tag></tag>"
+    """
+    return re.sub(r">\s+<", "><", html).strip()
+
+
+def test_minify() -> None:
+    html = """
+    <h1>Hello world</h1>
+    <p>Lorem ipsum</p>
+"""
+    assert minify(html) == "<h1>Hello world</h1><p>Lorem ipsum</p>"
 
 
 def test_root():
@@ -29,14 +47,8 @@ def test_get_tasks_empty():
     response = client.get("/tasks")
     assert response.status_code == 200
     assert (
-        response.get_data(as_text=True)
-        == """<h1>Все задачи</h1>
-
-<a href="/tasks/new">Создать новую</a>
-
-
-<p>Список пуст. Создайте свою первую задачу.</p>
-"""
+        minify(response.get_data(as_text=True))
+        == '<h1>Все задачи</h1><a href="/tasks/new">Создать новую</a><p>Список пуст. Создайте свою первую задачу.</p>'
     )
 
 
@@ -59,15 +71,6 @@ def test_get_tasks_not_empty():
     response = client.get("/tasks")
     assert response.status_code == 200
     assert (
-        response.get_data(as_text=True)
-        == """<h1>Все задачи</h1>\n
-<a href="/tasks/new">Создать новую</a>\n\n
-<ol>
-    
-    <li><a href="/tasks/1">Отдохнуть</a></li>
-    
-    <li><a href="/tasks/7">Сходить в магазин</a></li>
-    
-</ol>
-"""
+        minify(response.get_data(as_text=True))
+        == '<h1>Все задачи</h1><a href="/tasks/new">Создать новую</a><ol><li><a href="/tasks/1">Отдохнуть</a></li><li><a href="/tasks/7">Сходить в магазин</a></li></ol>'
     )
