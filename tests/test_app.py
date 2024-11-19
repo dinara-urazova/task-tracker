@@ -1,9 +1,33 @@
 import sys
 import os
+import re
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app
+
+
+class TaskStorageMock:
+    def __init__(self, dictionary: dict) -> None:
+        for k, v in dictionary.items():
+            setattr(self, k, v)
+
+
+def minify(html: str) -> str:
+    """
+    Remove line breaks and spaces betweeen HTML tags
+
+    Example: "<tag> </tag>   " -> "<tag></tag>"
+    """
+    return re.sub(r">\s+<", "><", html).strip()
+
+
+def test_minify() -> None:
+    html = """
+    <h1>Hello world</h1>
+    <p>Lorem ipsum</p>
+"""
+    assert minify(html) == "<h1>Hello world</h1><p>Lorem ipsum</p>"
 
 
 def test_root():
@@ -14,30 +38,24 @@ def test_root():
 
 
 def test_get_tasks_empty():
-    class TaskStorageMock:
-        def read_all(self) -> dict:
-            return []
-
-    app.config["task_storage"] = TaskStorageMock()
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_all": lambda: [],
+        }
+    )
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
     assert (
-        response.get_data(as_text=True)
-        == """<h1>Все задачи</h1>
-
-<a href="/tasks/new">Создать новую</a>
-
-
-<p>Список пуст. Создайте свою первую задачу.</p>
-"""
+        minify(response.get_data(as_text=True))
+        == '<h1>Все задачи</h1><a href="/tasks/new">Создать новую</a><p>Список пуст. Создайте свою первую задачу.</p>'
     )
 
 
 def test_get_tasks_not_empty():
-    class TaskStorageMock:
-        def read_all(self) -> dict:
-            return {
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_all": lambda: {
                 1: {
                     "name": "Отдохнуть",
                     "description": "Посмотреть фильм",
@@ -47,24 +65,12 @@ def test_get_tasks_not_empty():
                     "description": "Хлеб, молоко",
                 },
             }
-
-    app.config["task_storage"] = TaskStorageMock()
+        }
+    )
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
     assert (
-        response.get_data(as_text=True)
-        == """<h1>Все задачи</h1>
-
-<a href="/tasks/new">Создать новую</a>
-
-
-<ol>
-    
-    <li><a href="/tasks/1">Отдохнуть</a></li>
-    
-    <li><a href="/tasks/7">Сходить в магазин</a></li>
-    
-</ol>
-"""
+        minify(response.get_data(as_text=True))
+        == '<h1>Все задачи</h1><a href="/tasks/new">Создать новую</a><ol><li><a href="/tasks/1">Отдохнуть</a></li><li><a href="/tasks/7">Сходить в магазин</a></li></ol>'
     )
