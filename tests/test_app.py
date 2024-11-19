@@ -22,14 +22,16 @@ def test_get_tasks_empty():
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
-    assert response.get_data(as_text=True) == \
-"""<h1>Все задачи</h1>
+    assert (
+        response.get_data(as_text=True)
+        == """<h1>Все задачи</h1>
 
 <a href="/tasks/new">Создать новую</a>
 
 
 <p>Список пуст. Создайте свою первую задачу.</p>
 """
+    )
 
 
 def test_get_tasks_not_empty():
@@ -50,8 +52,9 @@ def test_get_tasks_not_empty():
     client = app.test_client()
     response = client.get("/tasks")
     assert response.status_code == 200
-    assert response.get_data(as_text=True) == \
-"""<h1>Все задачи</h1>
+    assert (
+        response.get_data(as_text=True)
+        == """<h1>Все задачи</h1>
 
 <a href="/tasks/new">Создать новую</a>
 
@@ -64,3 +67,4 @@ def test_get_tasks_not_empty():
     
 </ol>
 """
+    )
