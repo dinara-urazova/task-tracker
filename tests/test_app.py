@@ -47,7 +47,7 @@ def test_root():
     client = app.test_client()
     response = client.get("/")
     assert response.status_code == 302
-    assert response.headers.get("Location") == "/tasks"
+    assert response.headers.get("Location") == "/tasks" # header of HTTP response
 
 
 def test_get_tasks_empty():
@@ -114,8 +114,8 @@ def test_show_task_found():
 
     app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
     client = app.test_client()
-    response = client.get("/tasks/1")
-    assert response.status_code == 200
+    response = client.get("/tasks/1") # query of HTTP request
+    assert response.status_code == 200 # status code of HTTP response
     assert (
         minify(response.get_data(as_text=True))
         == '<a href="/tasks">Вернуться на главную</a><h1>Продукты</h1><h2>Описание</h2><p>Купить хлеб и молоко</p><p><em>Дата и время создания:</em></p><p><em>Дата и время последнего изменения:</em></p><a href="/tasks/1/edit">Редактировать</a>'
@@ -124,7 +124,7 @@ def test_show_task_found():
 
 def test_show_new_task_form():
     client = app.test_client()
-    response = client.get("/tasks/new")
+    response = client.get("/tasks/new") # query of HTTP request
     assert response.status_code == 200
     assert (
         minify(response.get_data(as_text=True))
@@ -141,11 +141,11 @@ def test_create_task():
     app.config["task_storage"] = TaskStorageMock({"create": create_mock})
     client = app.test_client()
     response = client.post(
-        "/tasks/create",
-        data={"task_name": "Пилатес", "task_description": "Заниматься 30 мин"},
-    )
+        "/tasks/create", # query of HTTP request
+        data={"task_name": "Пилатес", "task_description": "Заниматься 30 мин"}, # data - body of http post-request
+    ) 
     assert response.status_code == 302
-    assert response.headers.get("Location") == "/tasks/506"
+    assert response.headers.get("Location") == "/tasks/506" # header of HTTP post-response
 
 
 # def test_update_task_not_found():
