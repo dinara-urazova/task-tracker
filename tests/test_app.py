@@ -95,7 +95,7 @@ def test_get_tasks_not_empty():
     )
 
 
-def test_show_task_not_found():
+def test_get_task_not_found():
     def read_by_id_mock(id):
         assert id == "1"
         return None
@@ -112,7 +112,7 @@ def test_show_task_not_found():
     )
 
 
-def test_show_task_found():
+def test_get_task_found():
     def read_by_id_mock(id):
         assert id == "1"
         return {
@@ -132,7 +132,7 @@ def test_show_task_found():
     )
 
 
-def test_show_new_task_form():
+def test_get_new_task_form():
     client = app.test_client()
     response = client.get("/tasks/new")  # query of HTTP request
 
@@ -166,7 +166,51 @@ def test_create_task():
     )  # header of HTTP post-response
 
 
-def test_show_edit_task_not_found_form():
+def test_create_task_name_too_small():
+    def create_mock(task: Task) -> int:
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/create",  # query of HTTP request
+        data={
+            "task_name": "12",
+            "task_description": "Сходить в магазин",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name and task description should both contain at least 3 characters</p>"
+    )
+
+
+def test_create_task_description_too_small():
+    def create_mock(task: Task) -> int:
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/create",  # query of HTTP request
+        data={
+            "task_name": "Купить продукты",
+            "task_description": "Сх",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name and task description should both contain at least 3 characters</p>"
+    )
+
+
+def test_edit_task_not_found_form():
     def read_by_id_mock(id):
         assert id == "1"
         return None
@@ -183,7 +227,7 @@ def test_show_edit_task_not_found_form():
     )
 
 
-def test_show_edit_task_found_form():
+def test_edit_task_found_form():
     def read_by_id_mock(id):
         assert id == "1"
         return {
@@ -228,9 +272,11 @@ def test_update_task_found():
             "description": "Посмотреть фильм",
         }
 
-    def update_task_mock(id, updated_task: Task):
+    def update_task_mock(task_key: str, updated_task: Task):
+        assert task_key == "1"
         assert updated_task.name == "Пилатес"
         assert updated_task.description == "Заниматься 30 мин"
+        assert updated_task.created_at == None
 
     app.config["task_storage"] = TaskStorageMock(
         {
@@ -249,15 +295,6 @@ def test_update_task_found():
     )
     assert response.status_code == 302
     assert response.headers.get("Location") == "/tasks/1"
-
-    # без проверки ниже тест проходит, с проверкой - нет, так как сама задача не изменилась
-    
-    # response = client.get("/tasks/1")  
-    # assert response.status_code == 200
-    # assert (
-    #     minify(response.get_data(as_text=True))
-    #     == '<a href="/tasks">Вернуться на главную</a><h1>Пилатес</h1><h2>Описание</h2><p>Заниматься 30 мин</p><p><em>Дата и время создания:</em></p><p><em>Дата и время последнего изменения:</em></p><a href="/tasks/1/edit">Редактировать</a>'
-    # )
 
 
 def test_delete_task_not_found():
@@ -285,25 +322,16 @@ def test_delete_task_found():
             "description": "Посмотреть фильм",
         }
 
-    def delete_by_id_mock(id):
+    def delete_mock(id):
         assert id == "1"
-        return True
-
-    def read_all_mock():
-        return {}
 
     app.config["task_storage"] = TaskStorageMock(
         {
             "read_by_id": read_by_id_mock,
-            "delete": delete_by_id_mock,
-            "read_all": read_all_mock,
+            "delete": delete_mock,
         }
     )
     client = app.test_client()
     response = client.get("/tasks/1/delete")  # query of HTTP request
     assert response.status_code == 302
     assert response.headers.get("Location") == "/tasks"
-
-    response = client.get("/tasks")
-    assert response.status_code == 200
-    assert "Отдохнуть" not in response.get_data(as_text=True)

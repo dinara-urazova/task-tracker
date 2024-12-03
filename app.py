@@ -32,7 +32,7 @@ def get_tasks():
 
 
 @app.route("/tasks/<string:id>", methods=["GET"])
-def show_task(id: str):
+def get_task(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_show = task_storage.read_by_id(id)
     if task_to_show == None:
@@ -41,7 +41,7 @@ def show_task(id: str):
 
 
 @app.route("/tasks/new", methods=["GET"])
-def show_new_task_form():
+def get_new_task_form():
     return render_template("new.html")
 
 
@@ -54,13 +54,15 @@ def create_task():
         created_at,
         updated_at,
     )
+    if len(new_task.name) < 3 or len(new_task.description) < 3:
+        return abort(400, "Task name and task description should both contain at least 3 characters")
     task_storage = current_app.config["task_storage"]
     new_task_id = task_storage.create(new_task)
     return redirect(f"/tasks/{new_task_id}")
 
 
 @app.route("/tasks/<string:id>/edit", methods=["GET"])
-def show_edit_task_form(id: str):
+def edit_task_form(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_edit = task_storage.read_by_id(id)
     if task_to_edit == None:
