@@ -1,2 +1,6 @@
 Flask
 pg8000
+pytest
+pytest-cov
+ruff
+coverage-badge

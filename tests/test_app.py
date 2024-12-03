@@ -1,0 +1,337 @@
+import sys
+import os
+import re
+import pytest
+from task import Task
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app import app
+
+
+class TaskStorageMock:
+    def __init__(self, dictionary: dict) -> None:
+        for k, v in dictionary.items():
+            setattr(self, k, v)
+
+
+def minify(html: str) -> str:
+    """
+    Remove line breaks and spaces betweeen HTML tags
+    TODO: fix test_minify_line_break and delete pytest.mark.skip
+    Example: "<tag> </tag>   " -> "<tag></tag>"
+    """
+    return re.sub(r">\s+<", "><", html).strip()
+
+
+def test_minify() -> None:
+    html = """
+    <h1>Hello world</h1>
+    <p>Lorem ipsum</p>
+"""
+    assert minify(html) == "<h1>Hello world</h1><p>Lorem ipsum</p>"
+
+
+@pytest.mark.skip(reason="need to implement a line break between tag attributes")
+def test_minify_line_break() -> None:
+    html = """
+    <textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3"
+        maxlength="2000"></textarea><br><br>
+"""
+    assert (
+        minify(html)
+        == '<textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000"></textarea><br><br>'
+    )
+
+
+def test_root():
+    client = app.test_client()
+    response = client.get("/")
+
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/tasks"  # header of HTTP response
+
+
+def test_get_tasks_empty():
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_all": lambda: {},  # autotests for this endpoint feature a use of lambda func instead of a regular func
+        }
+    )
+
+    client = app.test_client()
+    response = client.get("/tasks")
+
+    assert response.status_code == 200
+    assert (
+        minify(response.get_data(as_text=True))
+        == '<h1>Все задачи</h1><a href="/tasks/new">Создать новую</a><p>Список пуст. Создайте свою первую задачу.</p>'
+    )
+
+
+def test_get_tasks_not_empty():
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_all": lambda: {
+                1: {
+                    "name": "Отдохнуть",
+                    "description": "Посмотреть фильм",
+                },
+                7: {
+                    "name": "Сходить в магазин",
+                    "description": "Хлеб, молоко",
+                },
+            }
+        }
+    )
+
+    client = app.test_client()
+    response = client.get("/tasks")
+
+    assert response.status_code == 200
+    assert (
+        minify(response.get_data(as_text=True))
+        == '<h1>Все задачи</h1><a href="/tasks/new">Создать новую</a><ol><li><a href="/tasks/1">Отдохнуть</a></li><li><a href="/tasks/7">Сходить в магазин</a></li></ol>'
+    )
+
+
+def test_get_task_not_found():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return None
+
+    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+
+    client = app.test_client()
+    response = client.get("/tasks/1")
+
+    assert response.status_code == 404
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>404 Not Found</title><h1>Not Found</h1><p>Task with id = 1 not found</p>"
+    )
+
+
+def test_get_task_found():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Продукты",
+            "description": "Купить хлеб и молоко",
+        }
+
+    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+
+    client = app.test_client()
+    response = client.get("/tasks/1")  # query of HTTP request
+
+    assert response.status_code == 200  # status code of HTTP response
+    assert (
+        minify(response.get_data(as_text=True))
+        == '<a href="/tasks">Вернуться на главную</a><h1>Продукты</h1><h2>Описание</h2><p>Купить хлеб и молоко</p><p><em>Дата и время создания:</em></p><p><em>Дата и время последнего изменения:</em></p><a href="/tasks/1/edit">Редактировать</a>'
+    )
+
+
+def test_get_new_task_form():
+    client = app.test_client()
+    response = client.get("/tasks/new")  # query of HTTP request
+
+    assert response.status_code == 200
+    assert (
+        minify(response.get_data(as_text=True))
+        == '<a href="/tasks">Назад</a><br><br><form action="/tasks/create" method="post"><label for="task_name">Название:</label><input type="text" id="task_name" name="task_name" required minlength="3" maxlength="100"><br><br><label for="task_description">Описание:</label><textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000"></textarea><br><br><input type="submit" value="Сохранить"></form>'
+    )
+
+
+def test_create_task():
+    def create_mock(task: Task) -> int:
+        assert task.name == "Пилатес"
+        assert task.description == "Заниматься 30 мин"
+        return 506
+
+    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/create",  # query of HTTP request
+        data={
+            "task_name": "Пилатес",
+            "task_description": "Заниматься 30 мин",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 302
+    assert (
+        response.headers.get("Location") == "/tasks/506"
+    )  # header of HTTP post-response
+
+
+def test_create_task_name_too_small():
+    def create_mock(task: Task) -> int:
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/create",  # query of HTTP request
+        data={
+            "task_name": "12",
+            "task_description": "Сходить в магазин",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name and task description should both contain at least 3 characters</p>"
+    )
+
+
+def test_create_task_description_too_small():
+    def create_mock(task: Task) -> int:
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/create",  # query of HTTP request
+        data={
+            "task_name": "Купить продукты",
+            "task_description": "Сх",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name and task description should both contain at least 3 characters</p>"
+    )
+
+
+def test_edit_task_not_found_form():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return None
+
+    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+
+    client = app.test_client()
+    response = client.get("/tasks/1/edit")  # query of HTTP request
+
+    assert response.status_code == 404
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>404 Not Found</title><h1>Not Found</h1><p>Task with id = 1 not found</p>"
+    )
+
+
+def test_edit_task_found_form():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Отдохнуть",
+            "description": "Посмотреть фильм",
+        }
+
+    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+
+    client = app.test_client()
+    response = client.get("/tasks/1/edit")  # query of HTTP request
+
+    assert response.status_code == 200
+    assert (
+        minify(response.get_data(as_text=True))
+        == '<a href="/tasks/1">Назад</a><br><br><a href="/tasks/1/delete">Удалить</a><br><br><form action="/tasks/1/update" method="post"><label for="task_name">Название:</label><input type="text" id="task_name" name="task_name" value="Отдохнуть" required minlength="3" maxlength="100"><br><br><label for="task_description">Описание:</label><textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000">Посмотреть фильм</textarea><br><br><input type="submit" value="Сохранить"></form>'
+    )
+
+
+def test_update_task_not_found():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return None
+
+    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+
+    client = app.test_client()
+    response = client.post("/tasks/1/update")
+
+    assert response.status_code == 404
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>404 Not Found</title><h1>Not Found</h1><p>Task with id = 1 not found</p>"
+    )
+
+
+def test_update_task_found():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Отдохнуть",
+            "description": "Посмотреть фильм",
+        }
+
+    def update_task_mock(task_key: str, updated_task: Task):
+        assert task_key == "1"
+        assert updated_task.name == "Пилатес"
+        assert updated_task.description == "Заниматься 30 мин"
+        assert updated_task.created_at == None
+
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_by_id": read_by_id_mock,
+            "update": update_task_mock,
+        }
+    )
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/1/update",  # query of HTTP request
+        data={
+            "task_name": "Пилатес",
+            "task_description": "Заниматься 30 мин",
+        },  # data - body of http post-request
+    )
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/tasks/1"
+
+
+def test_delete_task_not_found():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return None
+
+    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+
+    client = app.test_client()
+    response = client.get("/tasks/1/delete")
+
+    assert response.status_code == 404
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>404 Not Found</title><h1>Not Found</h1><p>Task with id = 1 not found</p>"
+    )
+
+
+def test_delete_task_found():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Отдохнуть",
+            "description": "Посмотреть фильм",
+        }
+
+    def delete_mock(id):
+        assert id == "1"
+
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_by_id": read_by_id_mock,
+            "delete": delete_mock,
+        }
+    )
+    client = app.test_client()
+    response = client.get("/tasks/1/delete")  # query of HTTP request
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/tasks"

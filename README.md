@@ -1,6 +1,6 @@
 # Install project
 
-To install project on local machine run these commands:
+To install project on a local machine run these commands:
 ```bash
 $ python3 -m venv .venv
 $ . .venv/bin/activate
