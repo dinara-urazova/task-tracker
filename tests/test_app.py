@@ -276,7 +276,7 @@ def test_update_task_found():
         assert task_key == "1"
         assert updated_task.name == "Пилатес"
         assert updated_task.description == "Заниматься 30 мин"
-        assert updated_task.created_at == None
+        assert updated_task.created_at is None
 
     app.config["task_storage"] = TaskStorageMock(
         {

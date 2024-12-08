@@ -24,7 +24,7 @@ class TaskStorageSQLite:
         cursor = SQLiteSingleton.getConnection().cursor()
         result = cursor.execute(f"SELECT * FROM tasks WHERE id = {id}")
         row = result.fetchone()
-        if row == None:
+        if row is None:
             return None
         return Task(row[1], row[2], row[3], row[4])
 

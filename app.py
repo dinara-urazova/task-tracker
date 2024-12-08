@@ -1,7 +1,7 @@
 from flask import abort, Flask, redirect, render_template, request, current_app
 from task import Task
-from task_storage_sqlite import TaskStorageSQLite
-from task_storage_json import TaskStorageJson
+# from task_storage_sqlite import TaskStorageSQLite
+# from task_storage_json import TaskStorageJson
 from task_storage_postgresql import TaskStoragePostgreSQL
 from datetime import datetime, timezone
 
@@ -35,7 +35,7 @@ def get_tasks():
 def get_task(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_show = task_storage.read_by_id(id)
-    if task_to_show == None:
+    if task_to_show is None:
         return abort(404, f"Task with id = {id} not found")
     return render_template("task.html", task=task_to_show, task_id=id)
 
@@ -65,7 +65,7 @@ def create_task():
 def edit_task_form(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_edit = task_storage.read_by_id(id)
-    if task_to_edit == None:
+    if task_to_edit is None:
         return abort(404, f"Task with id = {id} not found")
     return render_template("edit.html", task=task_to_edit, task_id=id)
 
@@ -89,7 +89,7 @@ def update_task(id: str):
     """
     task_storage = current_app.config["task_storage"]
     task_to_update = task_storage.read_by_id(id)
-    if task_to_update == None:
+    if task_to_update is None:
         return abort(404, f"Task with id = {id} not found")
     updated_at = datetime.now(timezone.utc).isoformat()
     updated_task = Task(
@@ -106,7 +106,7 @@ def update_task(id: str):
 def delete_task(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_delete = task_storage.read_by_id(id)
-    if task_to_delete == None:
+    if task_to_delete is None:
         return abort(404, f"Task with id = {id} not found")
     task_storage.delete(id)
     return redirect("/tasks")
