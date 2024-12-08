@@ -343,6 +343,144 @@ def test_update_task_found():
     assert response.headers.get("Location") == "/tasks/1"
 
 
+def test_update_task_name_too_small():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Купить продукты",
+            "description": "Купить молоко и хлеб",
+        }
+
+    def update_task_mock(task_key: str, updated_task: Task):
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_by_id": read_by_id_mock,
+            "update": update_task_mock,
+        }
+    )
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/1/update",  # query of HTTP request
+        data={
+            "task_name": "Пи",
+            "task_description": "Заниматься 30 мин",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name and task description should both contain at least 3 characters</p>"
+    )
+
+
+def test_update_task_description_too_small():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Купить продукты",
+            "description": "Купить молоко и хлеб",
+        }
+
+    def update_task_mock(task_key: str, updated_task: Task):
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_by_id": read_by_id_mock,
+            "update": update_task_mock,
+        }
+    )
+
+    client = app.test_client()
+    response = client.post(
+        "/tasks/1/update",  # query of HTTP request
+        data={
+            "task_name": "Пилатес",
+            "task_description": "За",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name and task description should both contain at least 3 characters</p>"
+    )
+
+
+def test_update_task_name_too_big():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Купить продукты",
+            "description": "Купить молоко и хлеб",
+        }
+
+    def update_task_mock(task_key: str, updated_task: Task):
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_by_id": read_by_id_mock,
+            "update": update_task_mock,
+        }
+    )
+
+    client = app.test_client()
+    task_name = "a" * 101
+    response = client.post(
+        "/tasks/1/update",  # query of HTTP request
+        data={
+            "task_name": task_name,
+            "task_description": "Заниматься 30 мин",
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name should contain no more than 100 characters</p>"
+    )
+
+
+def test_update_task_description_too_big():
+    def read_by_id_mock(id):
+        assert id == "1"
+        return {
+            "name": "Купить продукты",
+            "description": "Купить молоко и хлеб",
+        }
+
+    def update_task_mock(task_key: str, updated_task: Task):
+        assert False
+
+    app.config["task_storage"] = TaskStorageMock(
+        {
+            "read_by_id": read_by_id_mock,
+            "update": update_task_mock,
+        }
+    )
+
+    client = app.test_client()
+    task_description = "a" * 2001
+    response = client.post(
+        "/tasks/1/update",  # query of HTTP request
+        data={
+            "task_name": "Пилатес",
+            "task_description": task_description,
+        },  # data - body of http post-request
+    )
+
+    assert response.status_code == 400
+    assert (
+        minify(response.get_data(as_text=True))
+        == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task description should contain no more than 2000 characters</p>"
+    )
+
+
 def test_delete_task_not_found():
     def read_by_id_mock(id):
         assert id == "1"
