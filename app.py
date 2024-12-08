@@ -56,6 +56,10 @@ def create_task():
     )
     if len(new_task.name) < 3 or len(new_task.description) < 3:
         return abort(400, "Task name and task description should both contain at least 3 characters")
+    if len(new_task.name) > 100:
+        return abort(400, "Task name should contain no more than 100 characters")
+    if len(new_task.description) > 2000:
+        return abort(400, "Task description should contain no more than 2000 characters")
     task_storage = current_app.config["task_storage"]
     new_task_id = task_storage.create(new_task)
     return redirect(f"/tasks/{new_task_id}")
