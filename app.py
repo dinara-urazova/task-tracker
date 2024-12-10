@@ -1,7 +1,8 @@
 from flask import abort, Flask, redirect, render_template, request, current_app
 from task import Task
-from task_storage_sqlite import TaskStorageSQLite
-from task_storage_json import TaskStorageJson
+
+# from task_storage_sqlite import TaskStorageSQLite
+# from task_storage_json import TaskStorageJson
 from task_storage_postgresql import TaskStoragePostgreSQL
 from datetime import datetime, timezone
 
@@ -35,7 +36,7 @@ def get_tasks():
 def get_task(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_show = task_storage.read_by_id(id)
-    if task_to_show == None:
+    if task_to_show is None:
         return abort(404, f"Task with id = {id} not found")
     return render_template("task.html", task=task_to_show, task_id=id)
 
@@ -55,7 +56,16 @@ def create_task():
         updated_at,
     )
     if len(new_task.name) < 3 or len(new_task.description) < 3:
-        return abort(400, "Task name and task description should both contain at least 3 characters")
+        return abort(
+            400,
+            "Task name and task description should both contain at least 3 characters",
+        )
+    if len(new_task.name) > 100:
+        return abort(400, "Task name should contain no more than 100 characters")
+    if len(new_task.description) > 2000:
+        return abort(
+            400, "Task description should contain no more than 2000 characters"
+        )
     task_storage = current_app.config["task_storage"]
     new_task_id = task_storage.create(new_task)
     return redirect(f"/tasks/{new_task_id}")
@@ -65,7 +75,7 @@ def create_task():
 def edit_task_form(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_edit = task_storage.read_by_id(id)
-    if task_to_edit == None:
+    if task_to_edit is None:
         return abort(404, f"Task with id = {id} not found")
     return render_template("edit.html", task=task_to_edit, task_id=id)
 
@@ -89,7 +99,7 @@ def update_task(id: str):
     """
     task_storage = current_app.config["task_storage"]
     task_to_update = task_storage.read_by_id(id)
-    if task_to_update == None:
+    if task_to_update is None:
         return abort(404, f"Task with id = {id} not found")
     updated_at = datetime.now(timezone.utc).isoformat()
     updated_task = Task(
@@ -98,6 +108,18 @@ def update_task(id: str):
         None,
         updated_at,
     )
+    if len(updated_task.name) < 3 or len(updated_task.description) < 3:
+        return abort(
+            400,
+            "Task name and task description should both contain at least 3 characters",
+        )
+    if len(updated_task.name) > 100:
+        return abort(400, "Task name should contain no more than 100 characters")
+    if len(updated_task.description) > 2000:
+        return abort(
+            400, "Task description should contain no more than 2000 characters"
+        )
+
     task_storage.update(id, updated_task)
     return redirect(f"/tasks/{id}")
 
@@ -106,7 +128,7 @@ def update_task(id: str):
 def delete_task(id: str):
     task_storage = current_app.config["task_storage"]
     task_to_delete = task_storage.read_by_id(id)
-    if task_to_delete == None:
+    if task_to_delete is None:
         return abort(404, f"Task with id = {id} not found")
     task_storage.delete(id)
     return redirect("/tasks")
