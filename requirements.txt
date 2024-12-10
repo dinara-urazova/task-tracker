@@ -1,6 +1,7 @@
-Flask
-pg8000
-pytest
-pytest-cov
-ruff
-coverage-badge
+Flask==3.0.3
+pg8000==1.31.2
+pytest==8.3.3
+pytest-cov==6.0.0
+ruff==0.8.2
+coverage-badge==1.1.2
+SQLAlchemy==2.0.36

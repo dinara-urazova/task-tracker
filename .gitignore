@@ -3,3 +3,4 @@ __pycache__
 .DS_Store
 tasks.json
 tasks.db
+.coverage
