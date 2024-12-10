@@ -4,3 +4,4 @@ __pycache__
 tasks.json
 tasks.db
 .coverage
+.env
