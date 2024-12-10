@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     postgresql_hostname: str
     postgresql_port: str
 
-    model_config = SettingsConfigDict()
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 env_config = Settings()
