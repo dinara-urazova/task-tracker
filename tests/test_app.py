@@ -2,7 +2,7 @@ import sys
 import os
 import re
 import pytest
-from task import Task
+from entity.task import Task
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -55,7 +55,7 @@ def test_root():
 def test_get_tasks_empty():
     app.config["task_storage"] = TaskStorageMock(
         {
-            "read_all": lambda: {},  # autotests for this endpoint feature a use of lambda func instead of a regular func
+            "read_all": lambda: [],  # autotests for this endpoint feature a use of lambda func instead of a regular func
         }
     )
 
@@ -72,16 +72,18 @@ def test_get_tasks_empty():
 def test_get_tasks_not_empty():
     app.config["task_storage"] = TaskStorageMock(
         {
-            "read_all": lambda: {
-                1: {
+            "read_all": lambda: [
+                {
+                    "id": 1,
                     "name": "Отдохнуть",
                     "description": "Посмотреть фильм",
                 },
-                7: {
+                {
+                    "id": 7,
                     "name": "Сходить в магазин",
                     "description": "Хлеб, молоко",
                 },
-            }
+            ]
         }
     )
 
@@ -116,6 +118,7 @@ def test_get_task_found():
     def read_by_id_mock(id):
         assert id == "1"
         return {
+            "id": 1,
             "name": "Продукты",
             "description": "Купить хлеб и молоко",
         }
@@ -277,6 +280,7 @@ def test_edit_task_found_form():
     def read_by_id_mock(id):
         assert id == "1"
         return {
+            "id": 1,
             "name": "Отдохнуть",
             "description": "Посмотреть фильм",
         }
@@ -313,16 +317,12 @@ def test_update_task_not_found():
 def test_update_task_found():
     def read_by_id_mock(id):
         assert id == "1"
-        return {
-            "name": "Отдохнуть",
-            "description": "Посмотреть фильм",
-        }
+        return Task(id=1, name="Отдохнуть", description="Посмотреть фильм")
 
-    def update_task_mock(task_key: str, updated_task: Task):
-        assert task_key == "1"
-        assert updated_task.name == "Пилатес"
-        assert updated_task.description == "Заниматься 30 мин"
-        assert updated_task.created_at is None
+    def update_task_mock(task: Task):
+        assert task.id == 1
+        assert task.name == "Пилатес"
+        assert task.description == "Заниматься 30 мин"
 
     app.config["task_storage"] = TaskStorageMock(
         {
@@ -346,10 +346,7 @@ def test_update_task_found():
 def test_update_task_name_too_small():
     def read_by_id_mock(id):
         assert id == "1"
-        return {
-            "name": "Купить продукты",
-            "description": "Купить молоко и хлеб",
-        }
+        return Task(id=1, name="Купить продукты", description="Купить молоко и хлеб")
 
     def update_task_mock(task_key: str, updated_task: Task):
         assert False
@@ -380,10 +377,7 @@ def test_update_task_name_too_small():
 def test_update_task_description_too_small():
     def read_by_id_mock(id):
         assert id == "1"
-        return {
-            "name": "Купить продукты",
-            "description": "Купить молоко и хлеб",
-        }
+        return Task(id=1, name="Купить продукты", description="Купить молоко и хлеб")
 
     def update_task_mock(task_key: str, updated_task: Task):
         assert False
@@ -414,10 +408,7 @@ def test_update_task_description_too_small():
 def test_update_task_name_too_big():
     def read_by_id_mock(id):
         assert id == "1"
-        return {
-            "name": "Купить продукты",
-            "description": "Купить молоко и хлеб",
-        }
+        return Task(id=1, name="Купить продукты", description="Купить молоко и хлеб")
 
     def update_task_mock(task_key: str, updated_task: Task):
         assert False
@@ -449,10 +440,7 @@ def test_update_task_name_too_big():
 def test_update_task_description_too_big():
     def read_by_id_mock(id):
         assert id == "1"
-        return {
-            "name": "Купить продукты",
-            "description": "Купить молоко и хлеб",
-        }
+        return Task(id=1, name="Купить продукты", description="Купить молоко и хлеб")
 
     def update_task_mock(task_key: str, updated_task: Task):
         assert False
@@ -502,6 +490,7 @@ def test_delete_task_found():
     def read_by_id_mock(id):
         assert id == "1"
         return {
+            "id": 1,
             "name": "Отдохнуть",
             "description": "Посмотреть фильм",
         }

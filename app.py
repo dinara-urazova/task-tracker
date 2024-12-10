@@ -1,16 +1,11 @@
 from flask import abort, Flask, redirect, render_template, request, current_app
-from task import Task
+from entity.task import Task
 
-# from task_storage_sqlite import TaskStorageSQLite
-# from task_storage_json import TaskStorageJson
-from task_storage_postgresql import TaskStoragePostgreSQL
-from datetime import datetime, timezone
+from task_storage_sql_alchemy import TaskStorageSqlAlchemy
 
 
 app = Flask(__name__)
-app.config["task_storage"] = TaskStoragePostgreSQL()
-# task_storage = TaskStorageSQLite()
-# task_storage = TaskStorageJson()
+app.config["task_storage"] = TaskStorageSqlAlchemy()
 
 
 @app.route("/", methods=["GET"])
@@ -48,12 +43,9 @@ def get_new_task_form():
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
-    created_at = updated_at = datetime.now(timezone.utc).isoformat()
     new_task = Task(
-        request.form["task_name"],
-        request.form["task_description"],
-        created_at,
-        updated_at,
+        name=request.form["task_name"],
+        description=request.form["task_description"],
     )
     if len(new_task.name) < 3 or len(new_task.description) < 3:
         return abort(
@@ -101,26 +93,21 @@ def update_task(id: str):
     task_to_update = task_storage.read_by_id(id)
     if task_to_update is None:
         return abort(404, f"Task with id = {id} not found")
-    updated_at = datetime.now(timezone.utc).isoformat()
-    updated_task = Task(
-        request.form["task_name"],
-        request.form["task_description"],
-        None,
-        updated_at,
-    )
-    if len(updated_task.name) < 3 or len(updated_task.description) < 3:
+    task_to_update.name = request.form["task_name"]
+    task_to_update.description = request.form["task_description"]
+    if len(task_to_update.name) < 3 or len(task_to_update.description) < 3:
         return abort(
             400,
             "Task name and task description should both contain at least 3 characters",
         )
-    if len(updated_task.name) > 100:
+    if len(task_to_update.name) > 100:
         return abort(400, "Task name should contain no more than 100 characters")
-    if len(updated_task.description) > 2000:
+    if len(task_to_update.description) > 2000:
         return abort(
             400, "Task description should contain no more than 2000 characters"
         )
 
-    task_storage.update(id, updated_task)
+    task_storage.update(task_to_update)
     return redirect(f"/tasks/{id}")
 
 
