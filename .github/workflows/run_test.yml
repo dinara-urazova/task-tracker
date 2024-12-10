@@ -2,6 +2,13 @@ name: Run Unit Test via Pytest
 
 on: [push]
 
+env:
+  POSTGRESQL_DATABASE:
+  POSTGRESQL_USERNAME:
+  POSTGRESQL_PASSWORD:
+  POSTGRESQL_HOSTNAME:
+  POSTGRESQL_PORT: 5432
+
 jobs:
   build:
     runs-on: ubuntu-latest
