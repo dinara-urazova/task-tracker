@@ -23,6 +23,9 @@ jobs:
         run: |
           pip install ruff
           ruff check
+      - name: Prepare environment variables
+        run: |
+          cp .env.example .env
       - name: Test with pytest
         run: |
           coverage run -m pytest  -v -s
