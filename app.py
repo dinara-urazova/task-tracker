@@ -59,8 +59,8 @@ def create_task():
             400, "Task description should contain no more than 2000 characters"
         )
     task_storage = current_app.config["task_storage"]
-    new_task_id = task_storage.create(new_task)
-    return redirect(f"/tasks/{new_task_id}")
+    task_storage.create(new_task)
+    return redirect(f"/tasks")
 
 
 @app.route("/tasks/<string:id>/edit", methods=["GET"])
@@ -117,5 +117,5 @@ def delete_task(id: str):
     task_to_delete = task_storage.read_by_id(id)
     if task_to_delete is None:
         return abort(404, f"Task with id = {id} not found")
-    task_storage.delete(id)
+    task_storage.delete(task_to_delete)
     return redirect("/tasks")
