@@ -60,7 +60,7 @@ def create_task():
         )
     task_storage = current_app.config["task_storage"]
     task_storage.create(new_task)
-    return redirect(f"/tasks")
+    return redirect("/tasks")
 
 
 @app.route("/tasks/<string:id>/edit", methods=["GET"])
