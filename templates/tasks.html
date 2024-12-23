@@ -1,13 +1,45 @@
-<h1>Все задачи</h1>
+{% extends 'base.html' %}
 
-<a href="/tasks/new">Создать новую</a>
+{% block content %}
 
-{% if tasks %}
-<ol>
-    {% for task in tasks %}
-    <li><a href="/tasks/{{task.id}}">{{ task.name }}</a></li>
-    {% endfor %}
-</ol>
-{% else %}
-<p>Список пуст. Создайте свою первую задачу.</p>
-{% endif %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">To Do List</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form id="todo-form" action="/tasks/create" method="post">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="todo-input" placeholder="Add new task" required
+                                name="task_name">
+                            <input type="hidden" name="task_description" value="'undefined">
+                            <button class="btn btn-primary" type="submit">
+                                Add
+                            </button>
+                        </div>
+                    </form>
+                    <ul class="list-group" id="todo-list">
+                        {% if tasks %}
+                        {% for task in tasks %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center>
+                            span class="task-text"><a href="/tasks/{{ task.id }}">{{ task.name }}</a></span>
+                            <input type="text" class="form-control edit-input" style="display: none;"
+                                value="{{ task.name }}">
+                                <div class="btn-group">
+                                    <a href="/tasks/{{ task.id }}/delete"
+                                        class="btn btn-danger btn-sm delete-btn">&#x2715;</a>
+                                    <button class="btn btn-primary btn-sm edit-btn">&#9998;</button>
+                                </div>
+                        </li>
+                        {% endfor %}
+                        {% else %}
+                        <p>Список пуст. Создайте свою первую задачу.</p>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

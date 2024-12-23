@@ -1,10 +1,29 @@
-<a href="/tasks">Назад</a><br><br>
+{% extends 'base.html' %}
+
+{% block content %}
+
+<a href="/tasks" class="button">Назад</a><br><br>
 
 <form action="/tasks/create" method="post">
-    <label for="task_name">Название:</label>
-    <input type="text" id="task_name" name="task_name" required minlength="3" maxlength="100">
-    <br><br>
-    <label for="task_description">Описание:</label>
-    <textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000"></textarea><br><br>
+    <div class="row responsive-label">
+        <div class="col-sm-6 col-md-1">
+            <label for="task_name">Название:</label>
+        </div>
+        <div class="col-sm-6 col-md-1">
+            <input type="text" id="task_name" name="task_name" required minlength="3" maxlength="100">
+        </div>
+    </div>
+
+    <div class="row responsive-label">
+        <div class="col-sm-6 col-md-1">
+            <label for="task_description">Описание:</label>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000">
+        </textarea>
+        </div>
+    </div>
     <input type="submit" value="Сохранить">
 </form>
+
+{% endblock %}
