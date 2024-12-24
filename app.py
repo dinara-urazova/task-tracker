@@ -40,19 +40,14 @@ def get_task(id: str):
 def create_task():
     new_task = Task(
         name=request.form["task_name"],
-        description=request.form["task_description"],
     )
-    if len(new_task.name) < 3 or len(new_task.description) < 3:
+    if len(new_task.name) < 3:
         return abort(
             400,
-            "Task name and task description should both contain at least 3 characters",
+            "Task name should contain at least 3 characters",
         )
     if len(new_task.name) > 100:
         return abort(400, "Task name should contain no more than 100 characters")
-    if len(new_task.description) > 2000:
-        return abort(
-            400, "Task description should contain no more than 2000 characters"
-        )
     task_storage = current_app.config["task_storage"]
     task_storage.create(new_task)
     return redirect("/tasks")
@@ -81,7 +76,6 @@ def update_task(id: str):
     POST /tasks/<task_id>/update
 
     task_name=...
-    task_description=...
     ```
     """
     task_storage = current_app.config["task_storage"]
@@ -89,18 +83,13 @@ def update_task(id: str):
     if task_to_update is None:
         return abort(404, f"Task with id = {id} not found")
     task_to_update.name = request.form["task_name"]
-    task_to_update.description = request.form["task_description"]
-    if len(task_to_update.name) < 3 or len(task_to_update.description) < 3:
+    if len(task_to_update.name) < 3:
         return abort(
             400,
-            "Task name and task description should both contain at least 3 characters",
+            "Task name should contain at least 3 characters",
         )
     if len(task_to_update.name) > 100:
         return abort(400, "Task name should contain no more than 100 characters")
-    if len(task_to_update.description) > 2000:
-        return abort(
-            400, "Task description should contain no more than 2000 characters"
-        )
 
     task_storage.update(task_to_update)
     return redirect(f"/tasks/{id}")
