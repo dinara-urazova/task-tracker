@@ -65,7 +65,7 @@ def test_get_tasks_empty():
     assert response.status_code == 200
     assert (
         minify(response.get_data(as_text=True))
-        == '<h1>Все задачи</h1><a href="/tasks/new">Создать новую</a><p>Список пуст. Создайте свою первую задачу.</p>'
+        == '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><input type="hidden" name="task_description" value="undefined"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><p>Список пуст. Создайте свою первую задачу.</p></ul></div></div></div></div></div></body></html>'
     )
 
 
