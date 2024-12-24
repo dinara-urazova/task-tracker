@@ -135,17 +135,6 @@ def test_get_task_found():
     )
 
 
-def test_get_new_task_form():
-    client = app.test_client()
-    response = client.get("/tasks/new")  # query of HTTP request
-
-    assert response.status_code == 200
-    assert (
-        minify(response.get_data(as_text=True))
-        == '<a href="/tasks">Назад</a><br><br><form action="/tasks/create" method="post"><label for="task_name">Название:</label><input type="text" id="task_name" name="task_name" required minlength="3" maxlength="100"><br><br><label for="task_description">Описание:</label><textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000"></textarea><br><br><input type="submit" value="Сохранить"></form>'
-    )
-
-
 def test_create_task():
     def create_mock(task: Task) -> int:
         assert task.name == "Пилатес"
@@ -165,7 +154,7 @@ def test_create_task():
 
     assert response.status_code == 302
     assert (
-        response.headers.get("Location") == "/tasks/506"
+        response.headers.get("Location") == "/tasks"
     )  # header of HTTP post-response
 
 
@@ -489,14 +478,10 @@ def test_delete_task_not_found():
 def test_delete_task_found():
     def read_by_id_mock(id):
         assert id == "1"
-        return {
-            "id": 1,
-            "name": "Отдохнуть",
-            "description": "Посмотреть фильм",
-        }
+        return Task(id=1, name="Отдохнуть", description="Посмотреть фильм")
 
-    def delete_mock(id):
-        assert id == "1"
+    def delete_mock(task_to_delete: Task):
+        assert task_to_delete.id == 1
 
     app.config["task_storage"] = TaskStorageMock(
         {

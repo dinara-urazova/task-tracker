@@ -36,11 +36,6 @@ def get_task(id: str):
     return render_template("task.html", task=task_to_show, task_id=id)
 
 
-@app.route("/tasks/new", methods=["GET"])
-def get_new_task_form():
-    return render_template("new.html")
-
-
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
     new_task = Task(
