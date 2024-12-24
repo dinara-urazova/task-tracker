@@ -64,7 +64,38 @@ def test_get_tasks_empty():
     assert response.status_code == 200
     assert (
         minify(response.get_data(as_text=True))
-        == '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><p>Список пуст. Создайте свою первую задачу.</p></ul></div></div></div></div></div></body></html>'
+        == '''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><p>Список пуст. Создайте свою первую задачу.</p></ul></div></div></div></div></div><script>
+    document.getElementById("todo-list").addEventListener("click", function (event) {
+        if (event.target.classList.contains("edit-btn")) {
+            const taskText = event.target.parentElement
+                .parentElement.querySelector(".task-text");
+            const editInput = event.target.parentElement
+                .parentElement.querySelector(".edit-input");
+            const taskEditBlueButton = event.target.parentElement
+                .parentElement.querySelector(".btn-group .edit-btn");
+
+            const taskForm = event.target.parentElement.parentElement.parentElement;
+
+            if (taskText.style.display !== "none") {
+                event.preventDefault();
+                // этот код переводит задачу в режим редактирования (синяя кнопка - галочка)
+                taskText.style.display = "none";
+                editInput.style.display = "block";
+                editInput.focus();
+                event.target.innerHTML = "&#10004;";
+                taskEditBlueButton.type = "submit";
+                // нужно у синей кнопки-галочки сделать type = submit при помощи JavaScript
+            } else {
+                // этот код переводит задачу в режим просмотра (синяя кнопка - карандаш)
+                taskText.textContent = editInput.value;
+                taskText.style.display = "inline";
+                editInput.style.display = "none";
+                event.target.innerHTML = "&#9998;";
+                taskForm.submit();
+            }
+        }
+    });
+</script></body></html>'''
     )
 
 
@@ -77,7 +108,7 @@ def test_get_tasks_not_empty():
                     "name": "Отдохнуть",
                 },
                 {
-                    "id": 7,
+                    "id": 2,
                     "name": "Сходить в магазин",
                 },
             ]
@@ -90,9 +121,39 @@ def test_get_tasks_not_empty():
     assert response.status_code == 200
     assert (
         minify(response.get_data(as_text=True))
-        == '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text"><a href="/tasks/1">Отдохнуть</a></span><input type="text" class="form-control edit-input" style="display: none;" value="Отдохнуть"><div class="btn-group"><a href="/tasks/1/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text"><a href="/tasks/7">Сходить в магазин</a></span><input type="text" class="form-control edit-input" style="display: none;" value="Сходить в магазин"><div class="btn-group"><a href="/tasks/7/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li></ul></div></div></div></div></div></body></html>'
-    )
+        == '''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><form action="/tasks/1/update" method="post"><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text">Отдохнуть</span><input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Отдохнуть"><div class="btn-group"><a href="/tasks/1/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button type="button" class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li></form><form action="/tasks/2/update" method="post"><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text">Сходить в магазин</span><input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Сходить в магазин"><div class="btn-group"><a href="/tasks/2/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button type="button" class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li></form></ul></div></div></div></div></div><script>
+    document.getElementById("todo-list").addEventListener("click", function (event) {
+        if (event.target.classList.contains("edit-btn")) {
+            const taskText = event.target.parentElement
+                .parentElement.querySelector(".task-text");
+            const editInput = event.target.parentElement
+                .parentElement.querySelector(".edit-input");
+            const taskEditBlueButton = event.target.parentElement
+                .parentElement.querySelector(".btn-group .edit-btn");
 
+            const taskForm = event.target.parentElement.parentElement.parentElement;
+
+            if (taskText.style.display !== "none") {
+                event.preventDefault();
+                // этот код переводит задачу в режим редактирования (синяя кнопка - галочка)
+                taskText.style.display = "none";
+                editInput.style.display = "block";
+                editInput.focus();
+                event.target.innerHTML = "&#10004;";
+                taskEditBlueButton.type = "submit";
+                // нужно у синей кнопки-галочки сделать type = submit при помощи JavaScript
+            } else {
+                // этот код переводит задачу в режим просмотра (синяя кнопка - карандаш)
+                taskText.textContent = editInput.value;
+                taskText.style.display = "inline";
+                editInput.style.display = "none";
+                event.target.innerHTML = "&#9998;";
+                taskForm.submit();
+            }
+        }
+    });
+</script></body></html>'''
+    )
 
 def test_get_task_not_found():
     def read_by_id_mock(id):
@@ -271,7 +332,7 @@ def test_update_task_found():
         },  # data - body of http post-request
     )
     assert response.status_code == 302
-    assert response.headers.get("Location") == "/tasks/1"
+    assert response.headers.get("Location") == "/tasks"
 
 
 def test_update_task_name_too_small():
