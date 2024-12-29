@@ -53,15 +53,6 @@ def create_task():
     return redirect("/tasks")
 
 
-@app.route("/tasks/<string:id>/edit", methods=["GET"])
-def edit_task_form(id: str):
-    task_storage = current_app.config["task_storage"]
-    task_to_edit = task_storage.read_by_id(id)
-    if task_to_edit is None:
-        return abort(404, f"Task with id = {id} not found")
-    return render_template("edit.html", task=task_to_edit, task_id=id)
-
-
 @app.route("/tasks/<string:id>/update", methods=["POST"])
 def update_task(id: str):
     """

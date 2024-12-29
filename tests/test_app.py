@@ -64,7 +64,7 @@ def test_get_tasks_empty():
     assert response.status_code == 200
     assert (
         minify(response.get_data(as_text=True))
-        == '''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><p>Список пуст. Создайте свою первую задачу.</p></ul></div></div></div></div></div><script>
+        == """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><p>Список пуст. Создайте свою первую задачу.</p></ul></div></div></div></div></div><script>
     document.getElementById("todo-list").addEventListener("click", function (event) {
         if (event.target.classList.contains("edit-btn")) {
             const taskText = event.target.parentElement
@@ -95,7 +95,7 @@ def test_get_tasks_empty():
             }
         }
     });
-</script></body></html>'''
+</script></body></html>"""
     )
 
 
@@ -121,7 +121,7 @@ def test_get_tasks_not_empty():
     assert response.status_code == 200
     assert (
         minify(response.get_data(as_text=True))
-        == '''<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><form action="/tasks/1/update" method="post"><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text">Отдохнуть</span><input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Отдохнуть"><div class="btn-group"><a href="/tasks/1/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button type="button" class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li></form><form action="/tasks/2/update" method="post"><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text">Сходить в магазин</span><input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Сходить в магазин"><div class="btn-group"><a href="/tasks/2/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button type="button" class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li></form></ul></div></div></div></div></div><script>
+        == """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container mt-5"><h1 class="text-center mb-4">To Do List</h1><div class="row justify-content-center"><div class="col-md-8"><div class="card"><div class="card-body"><form id="todo-form" action="/tasks/create" method="post"><div class="input-group mb-3"><input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name"><button class="btn btn-primary" type="submit">Add</button></div></form><ul class="list-group" id="todo-list"><form action="/tasks/1/update" method="post"><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text">Отдохнуть</span><input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Отдохнуть"><div class="btn-group"><a href="/tasks/1/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button type="button" class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li></form><form action="/tasks/2/update" method="post"><li class="list-group-item d-flex justify-content-between align-items-center"><span class="task-text">Сходить в магазин</span><input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Сходить в магазин"><div class="btn-group"><a href="/tasks/2/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a><button type="button" class="btn btn-primary btn-sm edit-btn">&#9998;</button></div></li></form></ul></div></div></div></div></div><script>
     document.getElementById("todo-list").addEventListener("click", function (event) {
         if (event.target.classList.contains("edit-btn")) {
             const taskText = event.target.parentElement
@@ -152,8 +152,9 @@ def test_get_tasks_not_empty():
             }
         }
     });
-</script></body></html>'''
+</script></body></html>"""
     )
+
 
 def test_get_task_not_found():
     def read_by_id_mock(id):
@@ -251,43 +252,6 @@ def test_create_task_name_too_big():
     assert (
         minify(response.get_data(as_text=True))
         == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name should contain no more than 100 characters</p>"
-    )
-
-
-def test_edit_task_not_found_form():
-    def read_by_id_mock(id):
-        assert id == "1"
-        return None
-
-    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
-
-    client = app.test_client()
-    response = client.get("/tasks/1/edit")  # query of HTTP request
-
-    assert response.status_code == 404
-    assert (
-        minify(response.get_data(as_text=True))
-        == "<!doctype html><html lang=en><title>404 Not Found</title><h1>Not Found</h1><p>Task with id = 1 not found</p>"
-    )
-
-
-def test_edit_task_found_form():
-    def read_by_id_mock(id):
-        assert id == "1"
-        return {
-            "id": 1,
-            "name": "Отдохнуть",
-        }
-
-    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
-
-    client = app.test_client()
-    response = client.get("/tasks/1/edit")  # query of HTTP request
-
-    assert response.status_code == 200
-    assert (
-        minify(response.get_data(as_text=True))
-        == '<a href="/tasks/1">Назад</a><br><br><a href="/tasks/1/delete">Удалить</a><br><br><form action="/tasks/1/update" method="post"><label for="task_name">Название:</label><input type="text" id="task_name" name="task_name" value="Отдохнуть" required minlength="3" maxlength="100"><input type="submit" value="Сохранить"></form>'
     )
 
 
