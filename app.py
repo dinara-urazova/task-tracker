@@ -83,7 +83,7 @@ def update_task(id: str):
         return abort(400, "Task name should contain no more than 100 characters")
 
     task_storage.update(task_to_update)
-    return redirect(f"/tasks")
+    return redirect("/tasks")
 
 
 @app.route("/tasks/<string:id>/delete", methods=["GET"])
