@@ -156,43 +156,6 @@ def test_get_tasks_not_empty():
     )
 
 
-def test_get_task_not_found():
-    def read_by_id_mock(id):
-        assert id == "1"
-        return None
-
-    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
-
-    client = app.test_client()
-    response = client.get("/tasks/1")
-
-    assert response.status_code == 404
-    assert (
-        minify(response.get_data(as_text=True))
-        == "<!doctype html><html lang=en><title>404 Not Found</title><h1>Not Found</h1><p>Task with id = 1 not found</p>"
-    )
-
-
-def test_get_task_found():
-    def read_by_id_mock(id):
-        assert id == "1"
-        return {
-            "id": 1,
-            "name": "Продукты",
-        }
-
-    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
-
-    client = app.test_client()
-    response = client.get("/tasks/1")  # query of HTTP request
-
-    assert response.status_code == 200  # status code of HTTP response
-    assert (
-        minify(response.get_data(as_text=True))
-        == '<a href="/tasks">Вернуться на главную</a><h1>Продукты</h1><h2>Описание</h2><p><em>Дата и время создания:</em></p><p><em>Дата и время последнего изменения:</em></p><a href="/tasks/1/edit">Редактировать</a>'
-    )
-
-
 def test_create_task():
     def create_mock(task: Task) -> int:
         assert task.name == "Пилатес"

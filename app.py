@@ -27,15 +27,6 @@ def get_tasks():
     return render_template("tasks.html", tasks=chores)
 
 
-@app.route("/tasks/<string:id>", methods=["GET"])
-def get_task(id: str):
-    task_storage = current_app.config["task_storage"]
-    task_to_show = task_storage.read_by_id(id)
-    if task_to_show is None:
-        return abort(404, f"Task with id = {id} not found")
-    return render_template("task.html", task=task_to_show, task_id=id)
-
-
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
     new_task = Task(
