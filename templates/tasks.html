@@ -1,13 +1,74 @@
-<h1>Все задачи</h1>
+{% extends 'base.html' %}
 
-<a href="/tasks/new">Создать новую</a>
+{% block content %}
 
-{% if tasks %}
-<ol>
-    {% for task in tasks %}
-    <li><a href="/tasks/{{task.id}}">{{ task.name }}</a></li>
-    {% endfor %}
-</ol>
-{% else %}
-<p>Список пуст. Создайте свою первую задачу.</p>
-{% endif %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">To Do List</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form id="todo-form" action="/tasks/create" method="post">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name">
+                            <button class="btn btn-primary" type="submit">Add</button>
+                        </div>
+                    </form>
+                    <ul class="list-group" id="todo-list">
+                        {% if tasks %}
+                        {% for task in tasks %}
+                        <form action="/tasks/{{task.id}}/update" method="post">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">                            
+                                <span class="task-text">{{ task.name }}</span>
+                                <input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="{{ task.name }}">
+                                <div class="btn-group">
+                                    <a href="/tasks/{{ task.id }}/delete" class="btn btn-danger btn-sm delete-btn">&#x2715;</a>
+                                    <button type="button" class="btn btn-primary btn-sm edit-btn">&#9998;</button>
+                                </div>
+                            </li>
+                        </form>
+                        {% endfor %}
+                        {% else %}
+                        <p>Список пуст. Создайте свою первую задачу.</p>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("todo-list").addEventListener("click", function (event) {
+        if (event.target.classList.contains("edit-btn")) {
+            const taskText = event.target.parentElement
+                .parentElement.querySelector(".task-text");
+            const editInput = event.target.parentElement
+                .parentElement.querySelector(".edit-input");
+            const taskEditBlueButton = event.target.parentElement
+                .parentElement.querySelector(".btn-group .edit-btn");
+
+            const taskForm = event.target.parentElement.parentElement.parentElement;
+
+            if (taskText.style.display !== "none") {
+                event.preventDefault();
+                // этот код переводит задачу в режим редактирования (синяя кнопка - галочка)
+                taskText.style.display = "none";
+                editInput.style.display = "block";
+                editInput.focus();
+                event.target.innerHTML = "&#10004;";
+                taskEditBlueButton.type = "submit";
+                // нужно у синей кнопки-галочки сделать type = submit при помощи JavaScript
+            } else {
+                // этот код переводит задачу в режим просмотра (синяя кнопка - карандаш)
+                taskText.textContent = editInput.value;
+                taskText.style.display = "inline";
+                editInput.style.display = "none";
+                event.target.innerHTML = "&#9998;";
+                taskForm.submit();
+            }
+        }
+    });
+</script>
+
+{% endblock %}
