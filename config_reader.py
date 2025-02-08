@@ -3,6 +3,7 @@ from pydantic import SecretStr
 
 
 class Settings(BaseSettings):
+    secret_key: str
     postgresql_database: str
     postgresql_username: str
     postgresql_password: SecretStr
