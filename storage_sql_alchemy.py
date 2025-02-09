@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, delete
 from sqlalchemy.orm import Session
 from config_reader import env_config
 from entity.table_models import Task, User, UserSession
@@ -87,5 +87,5 @@ class SessionStorageSqlAlchemy:
             stmt = select(UserSession).where(UserSession.session_uuid == session_uuid)
             session_to_delete = session.execute(stmt).scalar_one_or_none()
             if session_to_delete:
-                session.delete(session_uuid)
+                session.delete(session_to_delete)
                 session.commit()

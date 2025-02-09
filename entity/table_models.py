@@ -28,5 +28,6 @@ class UserSession(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     session_uuid: Mapped[str] = mapped_column(String(36), unique=True, nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(default=func.now())
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id")) 
   

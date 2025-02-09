@@ -9,15 +9,19 @@
             <div class="card">
                 <div class="card-body">
                     <form id="todo-form" action="/tasks/create" method="post">
+                        {{ form.hidden_tag() }} 
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name">
-                            <button class="btn btn-primary" type="submit">Add</button>
+                            {{ form.task_name(class="form-control", placeholder="Add new task", required=True) }} 
+                            {{ form.submit(class="btn btn-primary") }} 
+                            <!-- <input type="text" class="form-control" id="todo-input" placeholder="Add new task" required name="task_name">
+                            <button class="btn btn-primary" type="submit">Add</button> -->
                         </div>
                     </form>
                     <ul class="list-group" id="todo-list">
                         {% if tasks %}
                         {% for task in tasks %}
                         <form action="/tasks/{{task.id}}/update" method="post">
+                            {{ form.hidden_tag() }}
                             <li class="list-group-item d-flex justify-content-between align-items-center">                            
                                 <span class="task-text">{{ task.name }}</span>
                                 <input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="{{ task.name }}">

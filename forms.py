@@ -18,3 +18,7 @@ class LoginForm(FlaskForm):
     username = StringField("Username", [validators.DataRequired()])
     password = PasswordField("Password", [validators.DataRequired()])
     submit = SubmitField("Sign In")
+
+class TaskForm(FlaskForm):
+    task_name = StringField('Task Name', [validators.DataRequired()])
+    submit = SubmitField('Add Task')

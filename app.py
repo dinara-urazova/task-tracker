@@ -11,19 +11,25 @@ from flask import (
 from entity.table_models import Task, User, UserSession
 import uuid
 from http import HTTPStatus
-from forms import LoginForm, RegisterForm
+from forms import LoginForm, RegisterForm, TaskForm
 from werkzeug.security import generate_password_hash
-from storage_sql_alchemy import (
-    TaskStorageSqlAlchemy,
-    UserStorageSqlAlchemy,
-    SessionStorageSqlAlchemy,
-)
+from storage_sql_alchemy import TaskStorageSqlAlchemy, UserStorageSqlAlchemy, SessionStorageSqlAlchemy
 
+
+from flask_wtf.csrf import CSRFProtect
+from config_reader import Settings
+env_config = Settings()
+secret_key = env_config.secret_key
 
 app = Flask(__name__)
+
+app.config["SECRET_KEY"] = secret_key  # Set the secret key
 app.config["task_storage"] = TaskStorageSqlAlchemy()
 app.config["user_storage"] = UserStorageSqlAlchemy()
 app.config["session_storage"] = SessionStorageSqlAlchemy()
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 COOKIE_NAME = "session"
 
@@ -112,9 +118,13 @@ def get_tasks():
     session_storage = current_app.config["session_storage"]
     session_uuid = request.cookies.get(COOKIE_NAME)
     task_storage = current_app.config["task_storage"]
-    if session_storage.find_session(session_uuid):
+    session_data = session_storage.find_session(session_uuid)
+
+    form = TaskForm()
+
+    if session_data:
         chores = task_storage.read_all()
-        r = make_response(render_template("tasks.html", tasks=chores))
+        r = make_response(render_template("tasks.html", tasks=chores, form=form))
         r.set_cookie(COOKIE_NAME, session_uuid, path="/", max_age=60 * 60)
         return r
     return abort(HTTPStatus.UNAUTHORIZED.value)
@@ -122,19 +132,26 @@ def get_tasks():
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
-    new_task = Task(
-        name=request.form["task_name"],
-    )
-    if len(new_task.name) < 3:
-        return abort(
-            400,
-            "Task name should contain at least 3 characters",
-        )
-    if len(new_task.name) > 100:
-        return abort(400, "Task name should contain no more than 100 characters")
-    task_storage = current_app.config["task_storage"]
-    task_storage.create(new_task)
-    return redirect("/tasks")
+    form = TaskForm()
+    if form.validate_on_submit():  # Это будет включать проверку на CSRF
+        task_name = form.task_name.data
+    # new_task = Task(
+    #     name=request.form["task_name"],
+    # )
+        if len(task_name) < 3:
+            return abort(
+                400,
+                "Task name should contain at least 3 characters",
+            )
+        if len(task_name) > 100:
+            return abort(400, "Task name should contain no more than 100 characters")
+            
+        task_storage = current_app.config["task_storage"]
+        new_task = Task(name=task_name)
+        task_storage.create(new_task)
+        return redirect("/tasks")
+    
+    return render_template('tasks.html', form=form)
 
 
 @app.route("/tasks/<string:id>/update", methods=["POST"])
@@ -157,7 +174,8 @@ def update_task(id: str):
     task_to_update = task_storage.read_by_id(id)
     if task_to_update is None:
         return abort(404, f"Task with id = {id} not found")
-    task_to_update.name = request.form["task_name"]
+    
+    task_to_update.name = request.form.get("task_name")
     if len(task_to_update.name) < 3:
         return abort(
             400,
