@@ -8,16 +8,20 @@ from flask import (
     make_response,
     flash,
 )
-from entity.table_models import Task, User, UserSession
+from entity.task import Task
 import uuid
 from http import HTTPStatus
 from forms import LoginForm, RegisterForm, TaskForm
 from werkzeug.security import generate_password_hash
-from storage_sql_alchemy import TaskStorageSqlAlchemy, UserStorageSqlAlchemy, SessionStorageSqlAlchemy
+from typing import cast
 
+from Storage.task_storage_sql_alchemy import TaskStorageSqlAlchemy
+from Storage.user_storage_sql_alchemy import UserStorageSqlAlchemy
+from Storage.session_storage_sql_alchemy import SessionStorageSqlAlchemy
 
 from flask_wtf.csrf import CSRFProtect
 from config_reader import Settings
+
 env_config = Settings()
 secret_key = env_config.secret_key
 
@@ -31,12 +35,14 @@ app.config["session_storage"] = SessionStorageSqlAlchemy()
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
 
-COOKIE_NAME = "session"
+COOKIE_NAME = "task_tracker_session"
 
 
 @app.route("/", methods=["GET"])
 def root():
-    session_storage = current_app.config["session_storage"]
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
         return redirect("/tasks")
@@ -45,19 +51,23 @@ def root():
 
 @app.route("/register", methods=["POST", "GET"])
 def register():
-    session_storage = current_app.config["session_storage"]
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
         return redirect("/tasks")
 
     form = RegisterForm()
-    user_storage = current_app.config["user_storage"]
+    user_storage = cast(UserStorageSqlAlchemy, current_app.config["user_storage"])
 
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
 
-        if user_storage.find_or_verify_user(username, password=None):  # проверить, существует ли пользователь (без проверки пароля)
+        if user_storage.find_or_verify_user(
+            username, password=None
+        ):  # проверить, существует ли пользователь (без проверки пароля)
             flash("You are already registered, try to log in")
 
         else:  # пользователь не найден, нужно создать нового
@@ -68,10 +78,13 @@ def register():
 
     return render_template("register.html", title="Register", form=form)  # GET запрос
 
+
 @app.route("/login", methods=["POST", "GET"])
 def login():
-    session_storage = current_app.config["session_storage"]
-    user_storage = current_app.config["user_storage"]
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
+    user_storage = cast(UserStorageSqlAlchemy, current_app.config["user_storage"])
 
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
@@ -103,41 +116,56 @@ def login():
 
 @app.route("/logout", methods=["GET"])
 def logout():
-    session_storage = current_app.config["session_storage"]
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
         session_storage.delete_session(session_uuid)  # delete on server
 
         r = make_response(redirect("/"))
-        r.set_cookie(COOKIE_NAME, session_uuid, path="/", max_age=0)  # delete in browser
+        r.set_cookie(
+            COOKIE_NAME, session_uuid, path="/", max_age=0
+        )  # delete in browser
         return r
     return redirect("/")
 
+
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
-    session_storage = current_app.config["session_storage"]
+
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
     session_uuid = request.cookies.get(COOKIE_NAME)
-    task_storage = current_app.config["task_storage"]
     session_data = session_storage.find_session(session_uuid)
-
+    if session_data is None:
+        return abort(HTTPStatus.UNAUTHORIZED.value)  
+    
     form = TaskForm()
-
-    if session_data:
-        chores = task_storage.read_all()
-        r = make_response(render_template("tasks.html", tasks=chores, form=form))
-        r.set_cookie(COOKIE_NAME, session_uuid, path="/", max_age=60 * 60)
-        return r
-    return abort(HTTPStatus.UNAUTHORIZED.value)
+    task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
+    chores = task_storage.read_all(session_data.user_id)
+    r = make_response(render_template("tasks.html", tasks=chores, form=form))
+    r.set_cookie(COOKIE_NAME, session_uuid, path="/", max_age=60 * 60)
+    return r
+  
 
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
+
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
+    session_uuid = request.cookies.get(COOKIE_NAME)
+    session_data = session_storage.find_session(session_uuid)
+    if session_data is None:
+        return abort(HTTPStatus.UNAUTHORIZED.value)
+
     form = TaskForm()
     if form.validate_on_submit():  # Это будет включать проверку на CSRF
         task_name = form.task_name.data
-    # new_task = Task(
-    #     name=request.form["task_name"],
-    # )
+
         if len(task_name) < 3:
             return abort(
                 400,
@@ -145,17 +173,17 @@ def create_task():
             )
         if len(task_name) > 100:
             return abort(400, "Task name should contain no more than 100 characters")
-            
-        task_storage = current_app.config["task_storage"]
-        new_task = Task(name=task_name)
+
+        task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
+        new_task = Task(name=task_name, user_id=session_data.user_id)
         task_storage.create(new_task)
         return redirect("/tasks")
-    
-    return render_template('tasks.html', form=form)
+
+    return render_template("tasks.html", form=form)
 
 
-@app.route("/tasks/<string:id>/update", methods=["POST"])
-def update_task(id: str):
+@app.route("/tasks/<int:id>/update", methods=["POST"])
+def update_task(id: int):
     """
     Пользователь открыл в браузере существующую задачу, отредактировал её и нажал
     кнопку "Сохранить" на форме.
@@ -170,11 +198,20 @@ def update_task(id: str):
     task_name=...
     ```
     """
-    task_storage = current_app.config["task_storage"]
-    task_to_update = task_storage.read_by_id(id)
+    
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
+    session_uuid = request.cookies.get(COOKIE_NAME)
+    session_data = session_storage.find_session(session_uuid)
+    if session_data is None:
+        return abort(HTTPStatus.UNAUTHORIZED.value)
+    
+    task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
+    task_to_update = task_storage.read_by_id(id, session_data.user_id)
     if task_to_update is None:
         return abort(404, f"Task with id = {id} not found")
-    
+
     task_to_update.name = request.form.get("task_name")
     if len(task_to_update.name) < 3:
         return abort(
@@ -190,7 +227,16 @@ def update_task(id: str):
 
 @app.route("/tasks/<string:id>/delete", methods=["GET"])
 def delete_task(id: str):
-    task_storage = current_app.config["task_storage"]
+    
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
+    session_uuid = request.cookies.get(COOKIE_NAME)
+    session_data = session_storage.find_session(session_uuid)
+    if session_data is None:
+        return abort(HTTPStatus.UNAUTHORIZED.value)
+
+    task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
     task_to_delete = task_storage.read_by_id(id)
     if task_to_delete is None:
         return abort(404, f"Task with id = {id} not found")
