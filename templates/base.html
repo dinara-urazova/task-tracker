@@ -9,13 +9,21 @@
 </head>
 
 <body>
-    <div>Task Tracker: 
-        <a href="/login">Login</a>
-        <a href="/register">Register</a>
-        <a href="/logout">Logout</a>
-        </div>
-       <hr>
-    {% block content %}{% endblock %}
+    <div class="'container">
+        <h1>Task Tracker</h1>
+        <nav>
+            {% if logged_in %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {% endif %}
+        </nav>
+        <hr>
+        {% block content %}{% endblock %}
+    </div>
 </body>
 
 </html>
+
+

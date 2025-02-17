@@ -7,6 +7,7 @@ from flask import (
     current_app,
     make_response,
     flash,
+    session,
 )
 from entity.task import Task
 import uuid
@@ -45,8 +46,12 @@ def root():
     )
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
+        session["logged_in"] = True  # store logged-in state in flask session
         return redirect("/tasks")
-    return render_template("base.html")
+    return render_template(
+        "base.html",
+        logged_in=session.get("logged_in", False),  # if not logged in - false by default
+    )
 
 
 @app.route("/register", methods=["POST", "GET"])
@@ -56,9 +61,10 @@ def register():
     )
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
-        return redirect("/tasks")
+        session["logged_in"] = True # save logged_in state
 
     form = RegisterForm()
+
     user_storage = cast(UserStorageSqlAlchemy, current_app.config["user_storage"])
 
     if form.validate_on_submit():
@@ -76,7 +82,12 @@ def register():
             flash("You have successfully registered")
             return redirect("/login")
 
-    return render_template("register.html", title="Register", form=form)  # GET запрос
+    return render_template(
+        "register.html",
+        title="Register",
+        form=form,
+        logged_in=session.get("logged_in", False),
+    )  # GET запрос
 
 
 @app.route("/login", methods=["POST", "GET"])
@@ -88,6 +99,7 @@ def login():
 
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
+        session["logged_in"] = True # save logged_in state
         return redirect("/tasks")
 
     form = LoginForm()
@@ -102,6 +114,7 @@ def login():
         if user_data:
             session_uuid = str(uuid.uuid4())
             session_storage.create_session(session_uuid, user_data.id)
+            session["logged_in"] = True # save logged_in state
             r = make_response(redirect("/tasks"))
             r.set_cookie(COOKIE_NAME, session_uuid, path="/", max_age=60 * 60)
             return r
@@ -111,7 +124,12 @@ def login():
     elif form.csrf_token.errors:
         abort(HTTPStatus.FORBIDDEN.value)
 
-    return render_template("login.html", title="Sign In", form=form)
+    return render_template(
+        "login.html",
+        title="Sign In",
+        form=form,
+        logged_in=session.get("logged_in", False),
+    )
 
 
 @app.route("/logout", methods=["GET"])
@@ -121,6 +139,7 @@ def logout():
     )
     session_uuid = request.cookies.get(COOKIE_NAME)
     if session_storage.find_session(session_uuid):
+        session.pop("logged_in")  # delete logged_in state
         session_storage.delete_session(session_uuid)  # delete on server
 
         r = make_response(redirect("/"))
@@ -139,13 +158,18 @@ def get_tasks():
     )
     session_uuid = request.cookies.get(COOKIE_NAME)
     session_data = session_storage.find_session(session_uuid)
+    logged_in = session.get(
+        "logged_in", False
+    )  # здесь определили явно для лучшей читаемости
     if session_data is None:
         return abort(HTTPStatus.UNAUTHORIZED.value)
 
     form = TaskForm()
     task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
     chores = task_storage.read_all(session_data.user_id)
-    r = make_response(render_template("tasks.html", tasks=chores, form=form))
+    r = make_response(
+        render_template("tasks.html", tasks=chores, form=form, logged_in=logged_in)
+    )
     r.set_cookie(COOKIE_NAME, session_uuid, path="/", max_age=60 * 60)
     return r
 
