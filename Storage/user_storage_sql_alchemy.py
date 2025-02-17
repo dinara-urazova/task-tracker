@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from config_reader import env_config
 from entity.user import User
 from werkzeug.security import check_password_hash
-from typing import List, Optional
+from typing import Optional
 from sqlalchemy.exc import NoResultFound
 
 
@@ -28,8 +28,7 @@ class UserStorageSqlAlchemy:
             except NoResultFound:
                 return None  # пользователь не найден в БД
             if password is None:
-                return user  # возвр польз-ля (без проверки пароля)
-            if check_password_hash(user.db_hashed_password, password):
+                return user  # возвр-т польз-ля (без проверки пароля)
+            elif check_password_hash(user.db_hashed_password, password):
                 return user  # пароль совпадает
             return None  # пароль не совпадает
-

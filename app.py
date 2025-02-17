@@ -140,15 +140,14 @@ def get_tasks():
     session_uuid = request.cookies.get(COOKIE_NAME)
     session_data = session_storage.find_session(session_uuid)
     if session_data is None:
-        return abort(HTTPStatus.UNAUTHORIZED.value)  
-    
+        return abort(HTTPStatus.UNAUTHORIZED.value)
+
     form = TaskForm()
     task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
     chores = task_storage.read_all(session_data.user_id)
     r = make_response(render_template("tasks.html", tasks=chores, form=form))
     r.set_cookie(COOKIE_NAME, session_uuid, path="/", max_age=60 * 60)
     return r
-  
 
 
 @app.route("/tasks/create", methods=["POST"])
@@ -198,7 +197,7 @@ def update_task(id: int):
     task_name=...
     ```
     """
-    
+
     session_storage = cast(
         SessionStorageSqlAlchemy, current_app.config["session_storage"]
     )
@@ -206,7 +205,7 @@ def update_task(id: int):
     session_data = session_storage.find_session(session_uuid)
     if session_data is None:
         return abort(HTTPStatus.UNAUTHORIZED.value)
-    
+
     task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
     task_to_update = task_storage.read_by_id(id, session_data.user_id)
     if task_to_update is None:
@@ -225,9 +224,9 @@ def update_task(id: int):
     return redirect("/tasks")
 
 
-@app.route("/tasks/<string:id>/delete", methods=["GET"])
-def delete_task(id: str):
-    
+@app.route("/tasks/<int:id>/delete", methods=["GET"])
+def delete_task(id: int):
+
     session_storage = cast(
         SessionStorageSqlAlchemy, current_app.config["session_storage"]
     )
@@ -237,7 +236,7 @@ def delete_task(id: str):
         return abort(HTTPStatus.UNAUTHORIZED.value)
 
     task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
-    task_to_delete = task_storage.read_by_id(id)
+    task_to_delete = task_storage.read_by_id(id, session_data.user_id)
     if task_to_delete is None:
         return abort(404, f"Task with id = {id} not found")
     task_storage.delete(task_to_delete)

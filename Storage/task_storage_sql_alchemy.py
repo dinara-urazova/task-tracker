@@ -1,8 +1,9 @@
-from sqlalchemy import create_engine, select, delete
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from config_reader import env_config
 from entity.task import Task
 from typing import List, Optional
+
 
 class TaskStorageSqlAlchemy:
     def __init__(self):
@@ -16,7 +17,11 @@ class TaskStorageSqlAlchemy:
 
     def read_by_id(self, task_id: int, user_id: int) -> Optional[Task]:
         with Session(self.engine) as session:
-            stmt = select(Task).where(Task.user_id == user_id).where(Task.id == task_id).order_by(Task.id)
+            stmt = (
+                select(Task)
+                .where(Task.user_id == user_id)
+                .where(Task.id == task_id)
+            )
             return session.execute(stmt).scalar_one_or_none()
 
     def create(self, task: Task) -> int:
@@ -34,5 +39,3 @@ class TaskStorageSqlAlchemy:
         with Session(self.engine) as session:
             session.delete(task)
             session.commit()
-
-
