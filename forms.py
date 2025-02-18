@@ -32,5 +32,10 @@ class LoginForm(FlaskForm):
 
 
 class TaskForm(FlaskForm):
-    task_name = StringField("Task Name", [validators.DataRequired()])
+    task_name = StringField("Task Name", [
+        validators.DataRequired(),
+        validators.Length(
+            min=3, max=100, message="Task name should contain 3-100 characters"
+        )
+    ])
     submit = SubmitField("Add Task")
