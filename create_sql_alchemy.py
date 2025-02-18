@@ -2,8 +2,11 @@ from sqlalchemy import create_engine
 
 from config_reader import env_config
 from entity.base import Base
+# ruff: disable=F401
 from entity.task import Task
+# ruff: disable=F401
 from entity.user import User
+# ruff: disable=F401
 from entity.session import UserSession
 
 connection_str = f"postgresql+pg8000://{env_config.postgresql_username}:{env_config.postgresql_password}@{env_config.postgresql_hostname}:{env_config.postgresql_port}/{env_config.postgresql_database}"
