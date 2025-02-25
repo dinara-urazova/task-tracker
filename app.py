@@ -19,6 +19,7 @@ from typing import cast
 from Storage.task_storage_sql_alchemy import TaskStorageSqlAlchemy
 from Storage.user_storage_sql_alchemy import UserStorageSqlAlchemy
 from Storage.session_storage_sql_alchemy import SessionStorageSqlAlchemy
+from Storage.cookie_storage import CookieStorage
 
 from flask_wtf.csrf import CSRFProtect
 from config_reader import Settings
@@ -33,6 +34,7 @@ app.config["SECRET_KEY"] = secret_key  # Set the secret key
 app.config["task_storage"] = TaskStorageSqlAlchemy()
 app.config["user_storage"] = UserStorageSqlAlchemy()
 app.config["session_storage"] = SessionStorageSqlAlchemy()
+app.config["cooki_storage"] = CookieStorage()
 
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
@@ -41,11 +43,10 @@ COOKIE_NAME = "task_tracker_session"
 
 
 def find_session() -> UserSession | None:
-    session_storage = cast(
-        SessionStorageSqlAlchemy, current_app.config["session_storage"]
-    )
-    session_uuid = request.cookies.get(COOKIE_NAME)
+    session_storage = cast(SessionStorageSqlAlchemy, current_app.config["session_storage"])
+    cookie_sorage = cast(CookieStorage, current_app.config["cookie_storage"])
 
+    session_uuid = cookie_sorage.get_cookie_value()
     user_session = session_storage.find_session(session_uuid)
     if user_session:
         g.logged_in = True

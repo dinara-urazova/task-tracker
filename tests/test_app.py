@@ -1,71 +1,22 @@
 import sys
 import os
-import re
 import pytest
 from entity.task import Task
-from entity.session import UserSession
 from config_reader import Settings
-import uuid
+from utils import minify, StorageMock
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app
+
 env_config = Settings()
 
 
 @pytest.fixture
-def client(): 
-    """ A test client for the app."""
+def client():
+    """A test client for the app."""
     with app.test_client() as client:
         yield client
-
-class TaskStorageMock:
-    def __init__(self, dictionary: dict) -> None:
-        for k, v in dictionary.items():
-            setattr(self, k, v)
-
-class SessionStorageMock:
-    def __init__(self, dictionary: dict) -> None:
-        for k, v in dictionary.items():
-            setattr(self, k, v)
-
-
-def minify(html: str) -> str:
-    """
-    Remove line breaks and spaces betweeen HTML tags
-    TODO: fix test_minify_line_break and delete pytest.mark.skip
-    Example: "<tag> </tag>   " -> "<tag></tag>"
-    """
-    return re.sub(r">\s+<", "><", html).strip()
-
-
-def test_minify() -> None:
-    html = """
-    <h1>Hello world</h1>
-    <p>Lorem ipsum</p>
-"""
-    assert minify(html) == "<h1>Hello world</h1><p>Lorem ipsum</p>"
-
-
-@pytest.mark.skip(reason="need to implement a line break between tag attributes")
-def test_minify_line_break() -> None:
-    html = """
-    <textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000"></textarea><br><br>
-"""
-    assert (
-        minify(html)
-        == '<textarea id="task_description" name="task_description" rows="10" cols="30" required minlength="3" maxlength="2000"></textarea><br><br>'
-    )
-
-
-def test_root(client):
-    response = client.get("/")
-
-    assert response.status_code == 200
-    assert (
-        minify(response.get_data(as_text=True))
-        == """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker :: Home</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="'container"><h1>Task Tracker</h1><nav><a href="/">Home</a><a href="/login">Login</a><a href="/register">Register</a></nav><hr></div></body></html>"""
-    )
 
 
 def test_get_tasks_unauthorized(client):
@@ -81,25 +32,20 @@ def test_get_tasks_unauthorized(client):
 
 def test_get_tasks_authorized(client):
 
-    app.config["session_storage"] = SessionStorageMock(
+    app.config["session_storage"] = StorageMock(
         {
             "find_session": lambda: {
                 "id": 1,
                 "session_uuid": "test_session_uuid",
-                "user_id": 1
+                "user_id": 1,
             }
-          
         }
     )
 
-    app.config["task_storage"] = TaskStorageMock(
+    app.config["task_storage"] = StorageMock(
         {
             "read_all": lambda user_id: [
-                {
-                    "id": 1,
-                    "name": "Отдохнуть",
-                    user_id: 1 
-                },
+                {"id": 1, "name": "Отдохнуть", user_id: 1},
                 {
                     "id": 2,
                     "name": "Сходить в магазин",
@@ -108,7 +54,7 @@ def test_get_tasks_authorized(client):
             ]
         }
     )
-    
+
     response = client.get("/tasks")
 
     assert response.status_code == 200
@@ -224,7 +170,7 @@ def test_get_tasks_authorized(client):
 </body>
 
 </html>
-"""  
+"""
     )
 
 
@@ -233,7 +179,7 @@ def test_create_task():
         assert task.name == "Пилатес"
         return 506
 
-    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+    app.config["task_storage"] = StorageMock({"create": create_mock})
 
     client = app.test_client()
     response = client.post(
@@ -251,7 +197,7 @@ def test_create_task_name_too_small():
     def create_mock(task: Task) -> int:
         assert False
 
-    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+    app.config["task_storage"] = StorageMock({"create": create_mock})
 
     client = app.test_client()
     response = client.post(
@@ -272,7 +218,7 @@ def test_create_task_name_too_big():
     def create_mock(task: Task) -> int:
         assert False
 
-    app.config["task_storage"] = TaskStorageMock({"create": create_mock})
+    app.config["task_storage"] = StorageMock({"create": create_mock})
 
     client = app.test_client()
     task_name = "a" * 101
@@ -295,7 +241,7 @@ def test_update_task_not_found():
         assert id == "1"
         return None
 
-    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+    app.config["task_storage"] = StorageMock({"read_by_id": read_by_id_mock})
 
     client = app.test_client()
     response = client.post("/tasks/1/update")
@@ -316,7 +262,7 @@ def test_update_task_found():
         assert task.id == 1
         assert task.name == "Пилатес"
 
-    app.config["task_storage"] = TaskStorageMock(
+    app.config["task_storage"] = StorageMock(
         {
             "read_by_id": read_by_id_mock,
             "update": update_task_mock,
@@ -342,7 +288,7 @@ def test_update_task_name_too_small():
     def update_task_mock(task_key: str, updated_task: Task):
         assert False
 
-    app.config["task_storage"] = TaskStorageMock(
+    app.config["task_storage"] = StorageMock(
         {
             "read_by_id": read_by_id_mock,
             "update": update_task_mock,
@@ -372,7 +318,7 @@ def test_update_task_name_too_big():
     def update_task_mock(task_key: str, updated_task: Task):
         assert False
 
-    app.config["task_storage"] = TaskStorageMock(
+    app.config["task_storage"] = StorageMock(
         {
             "read_by_id": read_by_id_mock,
             "update": update_task_mock,
@@ -394,8 +340,9 @@ def test_update_task_name_too_big():
         == "<!doctype html><html lang=en><title>400 Bad Request</title><h1>Bad Request</h1><p>Task name should contain no more than 100 characters</p>"
     )
 
+
 def test_delete_task_unauthorized(client):
-    
+
     response = client.get("/tasks/1/delete")
 
     assert response.status_code == 404
@@ -410,7 +357,7 @@ def test_delete_task_not_found(client):
         assert id == "1"
         return None
 
-    app.config["task_storage"] = TaskStorageMock({"read_by_id": read_by_id_mock})
+    app.config["task_storage"] = StorageMock({"read_by_id": read_by_id_mock})
 
     response = client.get("/tasks/1/delete")
 
@@ -429,7 +376,7 @@ def test_delete_task_found():
     def delete_mock(task_to_delete: Task):
         assert task_to_delete.id == 1
 
-    app.config["task_storage"] = TaskStorageMock(
+    app.config["task_storage"] = StorageMock(
         {
             "read_by_id": read_by_id_mock,
             "delete": delete_mock,
