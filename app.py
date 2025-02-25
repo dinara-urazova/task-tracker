@@ -34,7 +34,7 @@ app.config["SECRET_KEY"] = secret_key  # Set the secret key
 app.config["task_storage"] = TaskStorageSqlAlchemy()
 app.config["user_storage"] = UserStorageSqlAlchemy()
 app.config["session_storage"] = SessionStorageSqlAlchemy()
-app.config["cooki_storage"] = CookieStorage()
+app.config["cookie_storage"] = CookieStorage()
 
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
@@ -136,7 +136,7 @@ def login_post():
 
     if not user:
         flash("Invalid username or password")
-        return
+        return redirect("/login")
 
     session_uuid = str(uuid.uuid4())
     session_storage = cast(
