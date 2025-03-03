@@ -15,11 +15,11 @@ def client():
 def test_root_authorized(client):
     test_session_uuid = "e6bb1782-fbab-4c25-8bfd-92757bcdf1db"
 
-    def find_session(session_uuid: str) -> Optional[UserSession]:
+    def find_session_mock(session_uuid: str) -> Optional[UserSession]:
         assert session_uuid == test_session_uuid
         return UserSession(id=1, session_uuid=test_session_uuid, user_id=1)
 
-    app.config["session_storage"] = StorageMock({"find_session": find_session})
+    app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
 
     app.config["cookie_storage"] = StorageMock(
         {
@@ -59,11 +59,11 @@ def test_root_authorized(client):
 def test_root_unauthorized(client):
     test_session_uuid = "e6bb1782-fbab-4c25-8bfd-92757bcdf1db"
 
-    def find_session(session_uuid: str) -> Optional[UserSession]:
+    def find_session_mock(session_uuid: str) -> Optional[UserSession]:
         assert session_uuid == test_session_uuid
         return None
 
-    app.config["session_storage"] = StorageMock({"find_session": find_session})
+    app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
 
     app.config["cookie_storage"] = StorageMock(
         {

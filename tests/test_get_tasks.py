@@ -1,8 +1,9 @@
 import pytest
+from unittest.mock import patch
 from utils import minify, StorageMock
 from entity.session import UserSession
+from entity.task import Task
 from typing import Optional
-
 
 from app import app
 
@@ -17,11 +18,11 @@ def client():
 def test_get_tasks_unauthorized(client):
     test_session_uuid = "e6bb1782-fbab-4c25-8bfd-92757bcdf1db"
 
-    def find_session(session_uuid: str) -> Optional[UserSession]:
+    def find_session_mock(session_uuid: str) -> Optional[UserSession]:
         assert session_uuid == test_session_uuid
         return None
 
-    app.config["session_storage"] = StorageMock({"find_session": find_session})
+    app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
 
     app.config["cookie_storage"] = StorageMock(
         {
@@ -46,12 +47,13 @@ def test_get_tasks_unauthorized(client):
 def test_get_tasks_authorized(client):
 
     test_session_uuid = "e6bb1782-fbab-4c25-8bfd-92757bcdf1db"
+    test_csrf_token = "fixed_csrf_token_value"
 
-    def find_session(session_uuid: str) -> Optional[UserSession]:
+    def find_session_mock(session_uuid: str) -> Optional[UserSession]:
         assert session_uuid == test_session_uuid
         return UserSession(id=1, session_uuid=test_session_uuid, user_id=1)
 
-    app.config["session_storage"] = StorageMock({"find_session": find_session})
+    app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
 
     app.config["cookie_storage"] = StorageMock(
         {
@@ -59,20 +61,17 @@ def test_get_tasks_authorized(client):
         }
     )
 
-    app.config["task_storage"] = StorageMock(
-        {
-            "read_all": lambda user_id: [
-                {"id": 1, "name": "Отдохнуть", user_id: 1},
-                {
-                    "id": 2,
-                    "name": "Сходить в магазин",
-                    user_id: 1,
-                },
-            ]
-        }
-    )
+    def read_all_mock(user_id):
+        assert user_id == 1
+        return [
+            Task(id=1, name="Отдохнуть", user_id=1),
+            Task(id=2, name="Сходить в магазин", user_id=1),
+        ]
 
-    response = client.get("/tasks")
+    app.config["task_storage"] = StorageMock({"read_all": read_all_mock})
+
+    with patch("flask_wtf.csrf.generate_csrf", return_value=test_csrf_token):
+        response = client.get("/tasks")
 
     assert response.status_code == 200
     assert minify(response.get_data(as_text=True)) == minify(
@@ -94,11 +93,9 @@ def test_get_tasks_authorized(client):
             <a href="/">Home</a>
             
                 <a href="/tasks">Tasks</a>
-                <a href="/logout">Logout</a>
-            
+                <a href="/logout">Logout</a>    
         </nav>
         <hr>
-        
 
 <div class="container mt-5">
     <h1 class="text-center mb-4">To Do List</h1>
@@ -107,17 +104,15 @@ def test_get_tasks_authorized(client):
             <div class="card">
                 <div class="card-body">
                     <form id="todo-form" action="/tasks/create" method="post">
-                        <input id="csrf_token" name="csrf_token" type="hidden" value="IjhlY2JkOWQyNDYzOTY2ZTk3NjI2NDZmYTcxYWY3YmE4MmM4NTFjNDQi.Z72a3Q.ZYDXYZ9J4uAmgdZjF8KhtEcT_FA"> 
+                        <input id="csrf_token" name="csrf_token" type="hidden" value="fixed_csrf_token_value"> 
                         <div class="input-group mb-3">
                             <input class="form-control" id="task_name" maxlength="100" minlength="3" name="task_name" placeholder="Add new task" required type="text" value=""> 
                             <input class="btn btn-primary" id="submit" name="submit" type="submit" value="Add Task"> 
                         </div>
                     </form>
-                    <ul class="list-group" id="todo-list">
-                        
-                        
+                    <ul class="list-group" id="todo-list">                        
                         <form action="/tasks/1/update" method="post">
-                            <input id="csrf_token" name="csrf_token" type="hidden" value="IjhlY2JkOWQyNDYzOTY2ZTk3NjI2NDZmYTcxYWY3YmE4MmM4NTFjNDQi.Z72a3Q.ZYDXYZ9J4uAmgdZjF8KhtEcT_FA">
+                            <input id="csrf_token" name="csrf_token" type="hidden" value="fixed_csrf_token_value">
                             <li class="list-group-item d-flex justify-content-between align-items-center">                            
                                 <span class="task-text">Отдохнуть</span>
                                 <input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Отдохнуть">
@@ -129,7 +124,7 @@ def test_get_tasks_authorized(client):
                         </form>
                         
                         <form action="/tasks/2/update" method="post">
-                            <input id="csrf_token" name="csrf_token" type="hidden" value="IjhlY2JkOWQyNDYzOTY2ZTk3NjI2NDZmYTcxYWY3YmE4MmM4NTFjNDQi.Z72a3Q.ZYDXYZ9J4uAmgdZjF8KhtEcT_FA">
+                            <input id="csrf_token" name="csrf_token" type="hidden" value="fixed_csrf_token_value">
                             <li class="list-group-item d-flex justify-content-between align-items-center">                            
                                 <span class="task-text">Сходить в магазин</span>
                                 <input type="text" name="task_name" class="form-control edit-input" style="display: none;" value="Сходить в магазин">
