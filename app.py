@@ -3,7 +3,6 @@ from flask import (
     Flask,
     redirect,
     render_template,
-    request,
     current_app,
     make_response,
     flash,

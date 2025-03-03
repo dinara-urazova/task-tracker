@@ -1,9 +1,7 @@
 import sys
 import os
 import pytest
-from entity.task import Task
 from config_reader import Settings
-from utils import minify, StorageMock
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
