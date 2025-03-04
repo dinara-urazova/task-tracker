@@ -4,14 +4,10 @@ import datetime
 from entity.base import Base
 
 
-class Task(Base):
-    __tablename__ = "tasks"  # название таблицы в БД (смотри через DBeaver)
+class UserSession(Base):
+    __tablename__ = "sessions"  # название таблицы в БД (смотри через DBeaver)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String)
+    session_uuid: Mapped[str] = mapped_column(String(36), unique=True, nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(default=func.now())
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=func.now(),
-        onupdate=func.now(),
-    )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
