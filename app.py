@@ -42,7 +42,9 @@ COOKIE_NAME = "task_tracker_session"
 
 
 def find_session() -> UserSession | None:
-    session_storage = cast(SessionStorageSqlAlchemy, current_app.config["session_storage"])
+    session_storage = cast(
+        SessionStorageSqlAlchemy, current_app.config["session_storage"]
+    )
     cookie_storage = cast(CookieStorage, current_app.config["cookie_storage"])
 
     session_uuid = cookie_storage.get_cookie_value()
@@ -78,7 +80,10 @@ def register_post():
 
     form = RegisterForm()
     if not form.validate_on_submit():
-        return abort(HTTPStatus.BAD_REQUEST.value)
+        return render_template(
+            "register.html",
+            form=form,
+        )
 
     username = form.username.data
     password = form.password.data
@@ -196,7 +201,6 @@ def create_task():
 
 
 @app.route("/tasks/<int:id>/update", methods=["POST"])
-
 def update_task(id: int):
     """
     Пользователь открыл в браузере существующую задачу, отредактировал её и нажал
@@ -215,7 +219,6 @@ def update_task(id: int):
     user_session = find_session()
     if not user_session:
         return abort(HTTPStatus.UNAUTHORIZED.value)
-    
 
     task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
     task_to_update = task_storage.read_by_id(id, user_session.user_id)
@@ -230,6 +233,7 @@ def update_task(id: int):
 
     task_storage.update(task_to_update)
     return redirect("/tasks")
+
 
 # @app.route("/tasks/<int:id>/update", methods=["GET", "POST"])
 
