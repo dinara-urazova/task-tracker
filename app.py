@@ -231,6 +231,43 @@ def update_task(id: int):
     task_storage.update(task_to_update)
     return redirect("/tasks")
 
+# @app.route("/tasks/<int:id>/update", methods=["GET", "POST"])
+
+# def update_task(id: int):
+#     if request.method == "POST":
+#         return update_task_post(id)
+#     return update_task_get(id)
+
+# def update_task_get(id: int):
+#     user_session = find_session()
+#     if not user_session:
+#         return abort(HTTPStatus.UNAUTHORIZED.value)
+
+#     task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
+#     task_to_update = task_storage.read_by_id(id, user_session.user_id)
+#     if task_to_update is None:
+#         return abort(404, f"Task with id = {id} not found")
+#     return redirect("/")
+
+
+# def update_task_post(id: int):
+#     user_session = find_session()
+#     if not user_session:
+#         return abort(HTTPStatus.UNAUTHORIZED.value)
+
+#     task_storage = cast(TaskStorageSqlAlchemy, current_app.config["task_storage"])
+#     task_to_update = task_storage.read_by_id(id, user_session.user_id)
+#     if task_to_update is None:
+#         return abort(404, f"Task with id = {id} not found")
+
+#     form = TaskForm()
+#     if not form.validate_on_submit():
+#         return abort(HTTPStatus.BAD_REQUEST.value)
+
+#     task_to_update.name = form.task_name.data
+#     task_storage.update(task_to_update)
+#     return redirect("/tasks")
+
 
 @app.route("/tasks/<int:id>/delete", methods=["GET"])
 def delete_task(id: int):

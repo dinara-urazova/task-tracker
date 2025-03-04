@@ -7,6 +7,7 @@ from typing import Optional
 
 from app import app
 
+
 @pytest.fixture
 def client():
     """A test client for the app."""
@@ -29,7 +30,8 @@ def test_update_unauthorized(client):
         }
     )
 
-    response = client.post("/tasks/1/update")
+    response = client.post("/tasks/1/update",   data={
+                "task_name": "Пойти в кино"})
 
     assert response.status_code == 401
     assert minify(response.get_data(as_text=True)) == minify(
@@ -40,17 +42,17 @@ def test_update_unauthorized(client):
     <h1>Unauthorized</h1>
     <p>The server could not verify that you are authorized to access the URL requested. You either supplied the wrong credentials (e.g. a bad password), or your browser doesn&#39;t understand how to supply the credentials required.</p>
             """
-        )
+    )
+
 
 def test_update_task_authorized(client):
     test_csrf_token = "fixed_csrf_token_value"
     test_session_uuid = "e6bb1782-fbab-4c25-8bfd-92757bcdf1db"
 
     def find_session_mock(session_uuid: str) -> Optional[UserSession]:
-        
+
         assert session_uuid == test_session_uuid
         return UserSession(id=1, session_uuid=test_session_uuid, user_id=1)
-
 
     app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
 
@@ -70,12 +72,12 @@ def test_update_task_authorized(client):
 
     with patch("flask_wtf.csrf.generate_csrf", return_value=test_csrf_token):
         response = client.post(
-        "/tasks/1/update",  # query of HTTP request
-        data={
-            "task_name": "Пилатес",
-            "csrf_token": test_csrf_token,
-        },  # data - body of http post-request
-    )
+            "/tasks/1/update",  # query of HTTP request
+            data={
+                "task_name": "Пилатес",
+                "csrf_token": test_csrf_token,
+            },  # data - body of http post-request
+        )
 
     def read_by_id_mock(id):
         assert id == "1"
@@ -93,7 +95,5 @@ def test_update_task_authorized(client):
         }
     )
 
-    
     assert response.status_code == 302
     assert response.headers.get("Location") == "/tasks"
-
