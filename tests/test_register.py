@@ -1,5 +1,5 @@
 import pytest
-from utils import StorageMock, minify
+from utils import StorageMock
 from entity.session import UserSession
 from typing import Optional
 from werkzeug.security import check_password_hash
@@ -19,7 +19,7 @@ def client():
 
 def test_register_success(client):
     def find_session_mock(session_uuid: str) -> Optional[UserSession]:
-        assert session_uuid == None
+        assert session_uuid is None
         return None
 
     app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
@@ -57,7 +57,7 @@ def test_register_success(client):
 
 def test_register_invalid_configm(client):
     def find_session_mock(session_uuid: str) -> Optional[UserSession]:
-        assert session_uuid == None
+        assert session_uuid is None
         return None
 
     app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
@@ -89,7 +89,7 @@ def test_register_invalid_configm(client):
 
 def test_register_too_short_password(client):
     def find_session_mock(session_uuid: str) -> Optional[UserSession]:
-        assert session_uuid == None
+        assert session_uuid is None
         return None
 
     app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
