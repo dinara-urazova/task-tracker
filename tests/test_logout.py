@@ -15,7 +15,7 @@ def client():
 
 
 def test_logout_unauthorized(client):
-    def find_session_mock(session_uuid: str) -> Optional[UserSession]:
+    def find_session_mock(session_uuid: str) -> None:
         assert session_uuid is None
         return None
 
