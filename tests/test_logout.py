@@ -21,6 +21,12 @@ def test_logout_unauthorized(client):
 
     app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
 
+    app.config["cookie_storage"] = StorageMock(
+        {
+            "get_cookie_value": lambda: None,
+        }
+    )
+    
     response = client.get("/logout")
 
     assert response.status_code == 302
