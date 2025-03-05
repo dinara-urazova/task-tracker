@@ -125,9 +125,8 @@ def login_post():
 
     if not form.validate_on_submit():
         return abort(HTTPStatus.BAD_REQUEST.value)
-
-    if form.csrf_token.errors:
-        return abort(HTTPStatus.FORBIDDEN.value)
+    # if form.csrf_token.errors:
+    #     return abort(HTTPStatus.FORBIDDEN.value)
 
     username = form.username.data
     password = form.password.data

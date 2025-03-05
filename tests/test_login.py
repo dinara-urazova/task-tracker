@@ -62,10 +62,6 @@ def test_login_unauthorized(client): # GET request - no session
         <h1>Login</h1>
 
 <form action="" method="post" novalidate>
-  <!-- 
-template argument generates a hidden field that includes a token that is used to protect the form against CSRF attacks. 
-All you need to do to have the form protected is include this hidden field and have the SECRET_KEY variable defined in the Flask configuration. If you take care of these two things, Flask-WTF does the rest for you
--->
   <p>
     <label for="username">Username</label><br>
     <input id="username" name="username" required size="32" type="text" value="">
@@ -140,7 +136,7 @@ def test_login_success(client):
     def find_or_verify_user_mock(username: str, password: str) -> User:
         assert username == "Dina"
         assert check_password_hash(hashed_password, password)
-        return User(login="Dina", db_hashed_password=hashed_password)
+        return User(id=1, login="Dina", db_hashed_password=hashed_password)
     
 
     app.config["user_storage"] = StorageMock(
@@ -171,7 +167,7 @@ def test_login_invalid_password(client):
 
     def find_or_verify_user_mock(username: str, password: Optional[str]) -> None:
         assert username == "Dina"
-        assert check_password_hash(generate_password_hash("87654321"), password)
+        assert check_password_hash(generate_password_hash("87654321"), password) == False
         return None
 
     app.config["user_storage"] = StorageMock(
@@ -188,12 +184,7 @@ def test_login_invalid_password(client):
         },
     )
 
-    print((response.get_data(as_text=True)))
+
     assert response.status_code == 302
-    assert minify(response.get_data(as_text=True)) == minify(
-            """
-   <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Task Tracker :: Register</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"></head><body><div class="container"><h1>Task Tracker</h1><nav><a href="/">Home</a><a href="/login">Login</a><a href="/register">Register</a></nav><hr><h1>Register</h1><form action="" method="post" novalidate><p><label for="username">Username</label><br><input id="username" maxlength="25" minlength="4" name="username" size="32" type="text" value="Dina"></p><p><label for="password">New Password</label><br><input id="password" minlength="8" name="password" required size="32" type="password" value=""><span style="color: red;">Passwords must match</span></p><p><label for="confirm">Repeat Password</label><br><input id="confirm" name="confirm" size="32" type="password" value=""></p><p><input id="submit" name="submit" type="submit" value="Register"></p></form></div></body></html>
-    """
-        )
-
-
+    assert response.headers.get("Location") == "/login"
+   
