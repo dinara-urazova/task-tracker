@@ -41,7 +41,7 @@ def test_root_authorized(client):
 </head>
 
 <body>
-    <div class="'container">
+    <div class="container">
         <h1>Task Tracker</h1>
         <nav>
             <a href="/">Home</a>
@@ -85,7 +85,7 @@ def test_root_unauthorized(client):
 </head>
 
 <body>
-    <div class="'container">
+    <div class="container">
         <h1>Task Tracker</h1>
         <nav>
             <a href="/">Home</a>

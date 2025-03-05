@@ -61,12 +61,12 @@ def test_update_task_authorized(client):
         }
     )
 
-    def read_by_id_mock(task_id: int, user_id) -> Task:
+    def read_by_id_mock(task_id: int, user_id: int) -> Task:
         assert task_id == 1
         assert user_id == 1
         return Task(id=1, name="Отдохнуть", user_id=1)
 
-    def update_task_mock(task: Task):
+    def update_mock(task: Task):
         assert task.id == 1
         assert task.name == "Пилатес"
         assert task.user_id == 1
@@ -74,7 +74,7 @@ def test_update_task_authorized(client):
     app.config["task_storage"] = StorageMock(
         {
             "read_by_id": read_by_id_mock,
-            "update": update_task_mock,
+            "update": update_mock,
         }
     )
 
