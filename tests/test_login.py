@@ -1,10 +1,8 @@
 import pytest
-from unittest.mock import patch
 from utils import StorageMock, minify
 from entity.session import UserSession
 from entity.user import User
 from typing import Optional
-from forms import LoginForm  
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import app
@@ -167,7 +165,7 @@ def test_login_invalid_password(client):
 
     def find_or_verify_user_mock(username: str, password: Optional[str]) -> None:
         assert username == "Dina"
-        assert check_password_hash(generate_password_hash("87654321"), password) == False
+        assert not check_password_hash(generate_password_hash("87654321"), password)
         return None
 
     app.config["user_storage"] = StorageMock(
