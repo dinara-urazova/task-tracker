@@ -16,12 +16,13 @@ def client():
     with app.test_client() as client:
         yield client
 
-def test_login_unauthorized(client): # GET request - no session
+
+def test_login_unauthorized(client):  # GET request - no session
 
     def find_session_mock(session_uuid: str) -> Optional[UserSession]:
         assert session_uuid is None
         return None
-    
+
     app.config["session_storage"] = StorageMock(
         {
             "find_session": find_session_mock,
@@ -79,7 +80,7 @@ def test_login_unauthorized(client): # GET request - no session
     )
 
 
-def test_login_authorized(client): # a user has already logged in
+def test_login_authorized(client):  # a user has already logged in
     test_session_uuid = "e6bb1782-fbab-4c25-8bfd-92757bcdf1db"
 
     def find_session_mock(session_uuid: str) -> Optional[UserSession]:
@@ -108,15 +109,50 @@ def test_login_authorized(client): # a user has already logged in
     assert response.status_code == 302
     assert response.headers.get("Location") == "/"
 
+
+def test_login_invalid_password(client):
+    hashed_password = generate_password_hash("8754321") # правильный пароль
+
+    def find_session_mock(session_uuid: str) -> Optional[UserSession]:
+        assert session_uuid is None
+        return None
+
+    app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
+
+    app.config["cookie_storage"] = StorageMock({"get_cookie_value": lambda: None})
+
+    def find_or_verify_user_mock(username: str, password: Optional[str]) -> None:
+        assert username == "Dina"
+        assert not check_password_hash(hashed_password, password) # проверяем, что пароль неправильный
+        return None
+
+    app.config["user_storage"] = StorageMock(
+        {
+            "find_or_verify_user": find_or_verify_user_mock,
+        }
+    )
+
+    response = client.post(
+        "/login",
+        data={
+            "username": "Dina",
+            "password": "12345678", # передаем неправильный пароль
+        },
+    )
+
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/login"
+
 def test_login_success(client):
     hashed_password = generate_password_hash("12345678")
 
     def find_session_mock(session_uuid: str) -> None:
         assert session_uuid is None
         return None
-    
-    def create_session_mock(session_uuid, user_id) -> None:
-        assert user_id == 1
+
+    def create_session_mock(session_uuid, id) -> None:
+        assert id == 1
+        return None
 
     app.config["session_storage"] = StorageMock(
         {
@@ -135,7 +171,6 @@ def test_login_success(client):
         assert username == "Dina"
         assert check_password_hash(hashed_password, password)
         return User(id=1, login="Dina", db_hashed_password=hashed_password)
-    
 
     app.config["user_storage"] = StorageMock(
         {
@@ -153,36 +188,3 @@ def test_login_success(client):
 
     assert response.status_code == 302
     assert response.headers.get("Location") == "/tasks"
-
-
-def test_login_invalid_password(client):
-    def find_session_mock(session_uuid: str) -> Optional[UserSession]:
-        assert session_uuid is None
-        return None
-
-    app.config["session_storage"] = StorageMock({"find_session": find_session_mock})
-    app.config["cookie_storage"] = StorageMock({"get_cookie_value": lambda: None})
-
-    def find_or_verify_user_mock(username: str, password: Optional[str]) -> None:
-        assert username == "Dina"
-        assert not check_password_hash(generate_password_hash("87654321"), password)
-        return None
-
-    app.config["user_storage"] = StorageMock(
-        {
-            "find_or_verify_user": find_or_verify_user_mock,
-        }
-    )
-
-    response = client.post(
-        "/login",
-        data={
-            "username": "Dina",
-            "password": "12345678",
-        },
-    )
-
-
-    assert response.status_code == 302
-    assert response.headers.get("Location") == "/login"
-   
