@@ -86,7 +86,7 @@ def test_get_tasks_authorized(client):
 </head>
 
 <body>
-    <div class="'container">
+    <div class="container">
         <h1>Task Tracker</h1>
         <nav>
             <a href="/">Home</a>

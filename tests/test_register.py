@@ -55,7 +55,7 @@ def test_register_success(client):
     assert response.headers.get("Location") == "/login"
 
 
-def test_register_invalid_configm(client):
+def test_register_invalid_confirm(client):
     def find_session_mock(session_uuid: str) -> Optional[UserSession]:
         assert session_uuid is None
         return None
